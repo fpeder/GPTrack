@@ -9,17 +9,17 @@ import util
 
 from sklearn.externals import joblib
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.neighbors import KernelDensity
 
 
 class SkinThresholder():
-    R_CB = (77, 127)
-    R_CR = (133, 173)
+    R_CBCR = [[77, 127], [133, 173]]
     R_H = (3, 43)
 
     def __init__(self, flag='YCBCR'):
         self._flag = flag
 
-    def run(self, img):
+    def run(self, img, th=None):
         skin = np.zeros(img.shape, np.uint8)
         mask = np.zeros(img.shape[:2], np.uint8)
 
@@ -31,8 +31,12 @@ class SkinThresholder():
         elif self._flag == 'YCBCR':
             img = cv2.cvtColor(img, cv2.COLOR_BGR2YCR_CB)
             cb, cr = img[:, :, 2], img[:, :, 1]
-            mask[(cb >= self.R_CB[0]) & (cb <= self.R_CB[1]) &
-                 (cr >= self.R_CR[0]) & (cr <= self.R_CR[1])] = 255
+
+            if not th:
+                th = self.R_CBCR
+
+            mask[(cb > th[0][0]) & (cb < th[0][1]) &
+                 (cr > th[1][0]) & (cr < th[1][1])] = 255
 
         else:
             pass
@@ -41,6 +45,20 @@ class SkinThresholder():
         skin[mask == 0] = 0
 
         return skin, mask
+
+    def set_thresholds(self, img, mask):
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2YCR_CB)
+        img[mask == 0] = 0
+
+        cb, cr = img[:, :, 2], img[:, :, 1]
+
+        th = []
+        for x in (cb, cr):
+            nz = x[x != 0]
+            mu, std = nz.mean(), np.sqrt(nz.var())
+            th.append([mu - 2*std, mu + 2*std])
+
+        return th
 
 
 class SkinClassifier():
