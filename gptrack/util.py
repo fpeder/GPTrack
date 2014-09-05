@@ -4,6 +4,14 @@
 import cv2
 
 
+def rgb2gray(x):
+    return cv2.cvtColor(x, cv2.COLOR_BGR2GRAY)
+
+
+def gray2rgb(x):
+    return cv2.cvtColor(x, cv2.COLOR_GRAY2BGR)
+
+
 def mat2vec(x):
     return x.reshape((x.shape[0] * x.shape[1], x.shape[2]))
 

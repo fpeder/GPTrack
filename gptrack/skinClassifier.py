@@ -56,7 +56,7 @@ class SkinThresholder():
         for x in (cb, cr):
             nz = x[x != 0]
             mu, std = nz.mean(), np.sqrt(nz.var())
-            th.append([mu - 2*std, mu + 2*std])
+            th.append([mu - 1.75*std, mu + 1.75*std])
 
         return th
 
