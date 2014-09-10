@@ -9,56 +9,47 @@ import util
 
 from sklearn.externals import joblib
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.neighbors import KernelDensity
+from sklearn.mixture import GMM
 
 
-class SkinThresholder():
-    R_CBCR = [[77, 127], [133, 173]]
-    R_H = (3, 43)
+class SkinQuickClassifier():
 
-    def __init__(self, flag='YCBCR'):
-        self._flag = flag
+    def __init__(self, skin, mask, nc=1, th=0.85):
+        self._nc = nc
+        self._th = th
+        self._g = GMM(n_components=self._nc).fit(
+            self.__reshape_data(skin, mask))
 
-    def run(self, img, th=None):
-        skin = np.zeros(img.shape, np.uint8)
-        mask = np.zeros(img.shape[:2], np.uint8)
+    def run(self, skin):
+        if self._g:
+            X = util.mat2vec(skin)
+            X = X[:, 1:]
 
-        if self._flag == 'HSV':
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-            h = img[:, :, 0]
-            mask[(h >= self.R_H[0]) & (h <= self.R_H[1])] = 255
+            prob = np.exp(self._g.score(X))
+            prob = prob.reshape((skin.shape[0], skin.shape[1]))
+            mask = self.__threshold(prob)
 
-        elif self._flag == 'YCBCR':
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2YCR_CB)
-            cb, cr = img[:, :, 2], img[:, :, 1]
+            import pylab as plt
+            plt.imshow(mask)
+            plt.show()
 
-            if not th:
-                th = self.R_CBCR
+        return skin
 
-            mask[(cb > th[0][0]) & (cb < th[0][1]) &
-                 (cr > th[1][0]) & (cr < th[1][1])] = 255
+    def __threshold(self, img):
+        img[img > self._th] = 255
+        img[img != 255] = 0
 
-        else:
-            pass
+        return img
 
-        skin = img.copy()
-        skin[mask == 0] = 0
+    def __reshape_data(self, skin, mask):
+        X = util.mat2vec(skin)
+        y = util.mat2vec(mask)
 
-        return skin, mask
+        nz = np.where(y != 0)[0]
+        X = X[nz]
+        X = X[:, 1:]
 
-    def set_thresholds(self, img, mask):
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2YCR_CB)
-        img[mask == 0] = 0
-
-        cb, cr = img[:, :, 2], img[:, :, 1]
-
-        th = []
-        for x in (cb, cr):
-            nz = x[x != 0]
-            mu, std = nz.mean(), np.sqrt(nz.var())
-            th.append([mu - 1.75*std, mu + 1.75*std])
-
-        return th
+        return X
 
 
 class SkinClassifier():
@@ -82,11 +73,13 @@ class SkinClassifier():
             p = self._model.predict(util.mat2vec(img))
             p = p.reshape((sh[0], sh[1]))
 
-            skin = imgg
+            sking = imgg
+            sking[p == 0] = 0
+            skin = img
             skin[p == 0] = 0
             p[p == 1] = 255
 
-            return (skin, p)
+            return (skin, sking, p)
 
     def get_data(self, nelem=-1, s=1):
         X = np.array([])
@@ -145,6 +138,55 @@ class SkinClassifier():
     @property
     def data(self):
         return (self._X, self._y)
+
+
+# class SkinThresholder():
+#     R_CBCR = [[77, 127], [133, 173]]
+#     R_H = (3, 43)
+
+#     def __init__(self, flag='YCBCR'):
+#         self._flag = flag
+
+#     def run(self, img, th=None):
+#         skin = np.zeros(img.shape, np.uint8)
+#         mask = np.zeros(img.shape[:2], np.uint8)
+
+#         if self._flag == 'HSV':
+#             img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+#             h = img[:, :, 0]
+#             mask[(h >= self.R_H[0]) & (h <= self.R_H[1])] = 255
+
+#         elif self._flag == 'YCBCR':
+#             img = cv2.cvtColor(img, cv2.COLOR_BGR2YCR_CB)
+#             cb, cr = img[:, :, 2], img[:, :, 1]
+
+#             if not th:
+#                 th = self.R_CBCR
+
+#             mask[(cb > th[0][0]) & (cb < th[0][1]) &
+#                  (cr > th[1][0]) & (cr < th[1][1])] = 255
+
+#         else:
+#             pass
+
+#         skin = img.copy()
+#         skin[mask == 0] = 0
+
+#         return skin, mask
+
+#     def set_thresholds(self, img, mask):
+#         img = cv2.cvtColor(img, cv2.COLOR_BGR2YCR_CB)
+#         img[mask == 0] = 0
+
+#         cb, cr = img[:, :, 2], img[:, :, 1]
+
+#         th = []
+#         for x in (cb, cr):
+#             nz = x[x != 0]
+#             mu, std = nz.mean(), np.sqrt(nz.var())
+#             th.append([mu - 1.75*std, mu + 1.75*std])
+
+#         return th
 
 
 if __name__ == '__main__':

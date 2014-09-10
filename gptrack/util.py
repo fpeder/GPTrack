@@ -4,6 +4,10 @@
 import cv2
 
 
+def hist1ch(x, ch, nbins=[255], interval=[1, 255]):
+    return cv2.calcHist([x], [ch], None, nbins, interval)
+
+
 def rgb2gray(x):
     return cv2.cvtColor(x, cv2.COLOR_BGR2GRAY)
 
@@ -13,7 +17,12 @@ def gray2rgb(x):
 
 
 def mat2vec(x):
-    return x.reshape((x.shape[0] * x.shape[1], x.shape[2]))
+    if len(x.shape) == 3:
+        x = x.reshape((x.shape[0] * x.shape[1], x.shape[2]))
+    else:
+        x = x.reshape((x.shape[0] * x.shape[1], 1))
+
+    return x
 
 
 def load_as_features(x):

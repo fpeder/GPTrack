@@ -42,39 +42,39 @@ class MyBlobDetector():
         return pts
 
 
-class BlobDetector():
+# class BlobDetector():
 
-    def __init__(self, method='dog', max_sigma=50, threshold=4):
-        self._method = method
-        self._ms = max_sigma
-        self._th = threshold
-        self._img = None
-        self._blobs = None
+#     def __init__(self, method='dog', max_sigma=50, threshold=4):
+#         self._method = method
+#         self._ms = max_sigma
+#         self._th = threshold
+#         self._img = None
+#         self._blobs = None
 
-    def run(self, img):
-        imgg = img
-        self._img = imgg
+#     def run(self, img):
+#         imgg = img
+#         self._img = imgg
 
-        if self._method == 'dog':
-            blobs = blob_dog(imgg, max_sigma=self._ms, threshold=self._th)
-            self._blobs = blobs
-            blobs = np.array([[x[1], x[0], x[2]] for x in blobs if
-                              (x[0] > 0 and x[1] > 0)], np.float32)
-            blobs = blobs[-blobs[:, -1].argsort()][:, :-1]
-            blobs = np.array(blobs)
+#         if self._method == 'dog':
+#             blobs = blob_dog(imgg, max_sigma=self._ms, threshold=self._th)
+#             self._blobs = blobs
+#             blobs = np.array([[x[1], x[0], x[2]] for x in blobs if
+#                               (x[0] > 0 and x[1] > 0)], np.float32)
+#             blobs = blobs[-blobs[:, -1].argsort()][:, :-1]
+#             blobs = np.array(blobs)
 
-        else:
-            pass
+#         else:
+#             pass
 
-        return blobs
+#         return blobs
 
-    def show(self):
-        tmp = cv2.cvtColor(self._img, cv2.COLOR_GRAY2BGR)
-        fig, ax = plt.subplots(1, 1)
-        ax.imshow(tmp, interpolation='nearest')
-        for blob in self._blobs:
-            y, x, r = blob
-            c = plt.Circle((x, y), r*1.4142, color='red', linewidth=2,
-                           fill=False)
-            ax.add_patch(c)
-        plt.show()
+#     def show(self):
+#         tmp = cv2.cvtColor(self._img, cv2.COLOR_GRAY2BGR)
+#         fig, ax = plt.subplots(1, 1)
+#         ax.imshow(tmp, interpolation='nearest')
+#         for blob in self._blobs:
+#             y, x, r = blob
+#             c = plt.Circle((x, y), r*1.4142, color='red', linewidth=2,
+#                            fill=False)
+#             ax.add_patch(c)
+#         plt.show()

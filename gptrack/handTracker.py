@@ -3,23 +3,25 @@
 
 import cv2
 
-from skinClassifier import SkinClassifier, SkinThresholder
+from skinClassifier import SkinClassifier, SkinQuickClassifier
 from skinEnhancer import SkinEnhancer
 from skinFill import SkinFill
 
 from pointDetector import PointDetector
 from pointTracker import PointTracker
 
+from util import rgb2gray
+
 
 class HandTracker():
 
-    def __init__(self, sc=SkinClassifier(), st=SkinThresholder(),
+    def __init__(self, sc=SkinClassifier(), st=SkinQuickClassifier,
                  sf=SkinFill(), se=SkinEnhancer(), pd=PointDetector(),
-                 pt=PointTracker()):
-
+                 pt=PointTracker, count=50):
         self._skin = {'classify': sc, 'threshold': st, 'enhance': se,
                       'fill': sf}
         self._points = {'detect': pd, 'track': pt}
+        self._count = count
         self._vc = None
 
     def run(self, vf, model='../data/model/forest.pkl'):
@@ -31,25 +33,32 @@ class HandTracker():
 
         while self._vc.isOpened():
             ret, frame = self._vc.read()
-
-            sking, mask = self._skin['classify'].run(frame)
-            mask = self._skin['enhance'].run(mask)
+            frameg = rgb2gray(frame)
 
             if init:
+                skin, sking, mask = self._skin['classify'].run(frame)
+                mask = self._skin['enhance'].run(mask)
                 pts = self._points['detect'].run(mask)
-                self._points['track'].init(sking, pts)
+
+                self._points['track'] = PointTracker(frameg, pts)
+
+                #self._skin['threshold'] = SkinQuickClassifier(skin, hands)
+
                 init = False
 
             else:
-                pts = self._points['track'].run(sking)
+                #self._skin['threshold'].run(frame)
+                pts = self._points['track'].run(frameg)
 
             self._points['track'].show()
 
             count += 1
+            if count == self._count:
+                count = 0
+                init = True
 
-            if cv2.waitKey(1) == ord('q'):
+            if cv2.waitKey(10) == ord('q'):
                 break
-
 
 
 if __name__ == '__main__':

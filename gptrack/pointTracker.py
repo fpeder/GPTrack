@@ -4,17 +4,15 @@
 import cv2
 import numpy as np
 
+from util import gray2rgb
+
 
 class PointTracker():
 
-    def __init__(self, tracker=cv2.calcOpticalFlowPyrLK):
-        self._tracker = tracker
-        self._prev = np.array([])
-        self._pts = np.array([])
-
-    def init(self, curr, pts):
-        self._prev = curr
+    def __init__(self, prev, pts, tracker=cv2.calcOpticalFlowPyrLK):
+        self._prev = prev
         self._pts = pts
+        self._tracker = tracker
 
     def run(self, curr):
         if self._prev.any() and self._pts.any():
@@ -26,9 +24,7 @@ class PointTracker():
         return self._pts
 
     def show(self, w='pts'):
-        if not len(self._prev.shape) == 3:
-            tmp = cv2.cvtColor(self._prev, cv2.COLOR_GRAY2BGR)
-
+        tmp = gray2rgb(self._prev).copy()
         for pt in self._pts.astype(np.int32):
             cv2.circle(tmp, tuple(pt), 12, (255, 0, 0), -1)
 
