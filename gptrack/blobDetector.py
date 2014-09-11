@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import cv2
 import numpy as np
-import pylab as plt
 
-from skimage.feature import blob_dog
 from connComps import ConnComps
 
 
@@ -18,11 +15,10 @@ class MyBlobDetector():
 
     def run(self, img):
         cc = self._cc.run(img)
-        labels = np.unique(cc)
-        pts = []
-        nelems = []
+        labels = np.unique(cc)[1:]
+        pts, nelems, new_labels = [], [], []
 
-        for label in labels[1:]:
+        for label in labels:
             nelem = len(cc[cc == label])
             if nelem > self._me:
                 (x, y) = np.where(cc == label)
@@ -30,16 +26,35 @@ class MyBlobDetector():
 
                 pts.append(pt)
                 nelems.append(nelem)
-            # else:
-            #    cc[cc == label] = 0
+                new_labels.append(label)
 
+            else:
+                cc[cc == label] = 0
+
+        pts, labels = self.__get_biggest(pts, nelems, new_labels)
+        mask = self.__get_mask(cc, labels)
+
+        return mask, pts
+
+    def __get_mask(self, cc, labels):
+        mask = cc
+        for lab in labels:
+            mask[mask == lab] = 255
+        mask[mask != 255] = 0
+
+        return mask
+
+    def __get_biggest(self, pts, nelems, idx):
         pts = np.array(pts)
+        nelems = np.array(nelems)
+        idx = np.array(idx)
 
         if self._nc and len(nelems) >= self._nc:
-            nelems = np.array(nelems)
-            pts = pts[np.argsort(-nelems), 0:self._nc]
+            sort = np.argsort(-nelems)
+            pts = pts[sort, 0:self._nc]
+            idx = idx[sort]
 
-        return pts
+        return pts, idx
 
 
 # class BlobDetector():

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import cv2
+import numpy as np
 
 
 def hist1ch(x, ch, nbins=[255], interval=[1, 255]):
@@ -16,7 +17,12 @@ def gray2rgb(x):
     return cv2.cvtColor(x, cv2.COLOR_GRAY2BGR)
 
 
+def rgb2ycrcb(x):
+    return cv2.cvtColor(x, cv2.COLOR_BGR2YCR_CB)
+
+
 def mat2vec(x):
+    x = x.astype(np.double)
     if len(x.shape) == 3:
         x = x.reshape((x.shape[0] * x.shape[1], x.shape[2]))
     else:
@@ -28,6 +34,7 @@ def mat2vec(x):
 def load_as_features(x):
     x = cv2.imread(x)
     x = cv2.cvtColor(x, cv2.COLOR_BGR2YCR_CB)
+
     return mat2vec(x)
 
 
@@ -36,4 +43,5 @@ def load_as_labels(x):
     y = y.reshape((y.shape[0] * y.shape[1], ))
     y[y == 255] = 0
     y[y > 0] = 1
+
     return y

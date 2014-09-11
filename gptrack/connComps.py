@@ -11,7 +11,7 @@ class ConnComps():
         pass
 
     def run(self, img):
-        label = img.copy()
+        label = np.int32(img.copy())
         ncomp = 1
 
         while True:
