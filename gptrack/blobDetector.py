@@ -8,7 +8,7 @@ from connComps import ConnComps
 
 class MyBlobDetector():
 
-    def __init__(self, num_comp=None, min_elem=2500):
+    def __init__(self, num_comp=2, min_elem=1500):
         self._nc = num_comp
         self._me = min_elem
         self._cc = ConnComps()
@@ -49,10 +49,10 @@ class MyBlobDetector():
         nelems = np.array(nelems)
         idx = np.array(idx)
 
-        if self._nc and len(nelems) >= self._nc:
+        if self._nc and (len(nelems) >= self._nc):
             sort = np.argsort(-nelems)
-            pts = pts[sort, 0:self._nc]
-            idx = idx[sort]
+            pts = pts[sort[0:self._nc], :]
+            idx = idx[sort[0:self._nc]]
 
         return pts, idx
 

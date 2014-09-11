@@ -2,7 +2,7 @@
 GPTrack
 ===========
 
-Guitar playing hand tracker...
+Guitar playing hands tracker...
 
 
 

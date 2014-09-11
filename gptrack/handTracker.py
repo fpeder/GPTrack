@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import cv2
+import numpy as np
 
 from skinClassifier import SkinClassifier
 from skinClassifier import SkinThresholder
@@ -64,6 +65,8 @@ class HandTracker():
         self._skin['classify'].load(model)
         self._vc = cv2.VideoCapture(vf)
 
+        trj = np.array([])
+
         while self._vc.isOpened():
             ret, frame = self._vc.read()
             frameg = rgb2gray(frame)
@@ -72,6 +75,7 @@ class HandTracker():
 
             if st == self._state.REINIT:
                 skin, mask, pts = self.__detect_hands(frame, 'classify')
+
                 self._skin['threshold'] = SkinThresholder(frame, mask)
                 self._points['track'] = PointTracker(frameg, pts)
 
@@ -84,10 +88,17 @@ class HandTracker():
 
             self._state.update()
 
+            if not trj.any():
+                trj = pts[1]
+            else:
+                trj = np.vstack((trj, pts[1]))
+
             # ---- display -----
             self._points['track'].show()
-            if cv2.waitKey(10) == ord('q'):
+            if cv2.waitKey(1) == ord('q'):
                 break
+        
+        return trj
 
     def __detect_hands(self, frame, flag):
         skin, mask = self._skin[flag].run(frame)
@@ -106,4 +117,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     ht = HandTracker()
-    ht.run(vf=args.infile)
+    trj = ht.run(vf=args.infile)
+
+    import pdb; pdb.set_trace()
+
+    

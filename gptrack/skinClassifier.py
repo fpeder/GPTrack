@@ -11,7 +11,6 @@ import util
 
 from sklearn.externals import joblib
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.mixture import GMM
 
 
 class SkinThresholder():
@@ -34,7 +33,6 @@ class SkinThresholder():
 
     def __calc_thresh(self, frame, mask):
         frame = util.rgb2ycrcb(frame)[mask != 0]
-        #frame = frame[mask != 0]
 
         cr, cb = frame[:, 1], frame[:, 2]
         pcr = [cr.mean(), np.sqrt(cr.var())]
@@ -47,52 +45,52 @@ class SkinThresholder():
         return th
 
 
-class SkinQuickClassifier():
+# class SkinQuickClassifier():
 
-    def __init__(self, frame, mask, nc=1, th=0.85, ch=1):
-        self._th = th
-        self._ch = ch
-        self._g = GMM(n_components=nc).fit(self.__reshape_data(frame, mask))
+#     def __init__(self, frame, mask, nc=1, th=0.85, ch=1):
+#         self._th = th
+#         self._ch = ch
+#         self._g = GMM(n_components=nc).fit(self.__reshape_data(frame, mask))
 
-    def run(self, frame):
-        if self._g:
-            frame = util.rgb2ycrcb(frame)
-            X = util.mat2vec(frame)
-            X = X[:, self._ch:]
+#     def run(self, frame):
+#         if self._g:
+#             frame = util.rgb2ycrcb(frame)
+#             X = util.mat2vec(frame)
+#             X = X[:, self._ch:]
 
-            prob = np.exp(self._g.score(X))
-            prob = prob.reshape((frame.shape[0], frame.shape[1]))
+#             prob = np.exp(self._g.score(X))
+#             prob = prob.reshape((frame.shape[0], frame.shape[1]))
 
-            #mask = self.__threshold(prob)
+#             #mask = self.__threshold(prob)
 
-            import pylab as plt
-            import pdb; pdb.set_trace()
+#             import pylab as plt
+#             import pdb; pdb.set_trace()
 
-        return mask
+#         return mask
 
-    def __apply_mask(self, frame, mask):
-        frame[mask == 0] = [0, 0, 0]
+#     def __apply_mask(self, frame, mask):
+#         frame[mask == 0] = [0, 0, 0]
 
-        return frame
+#         return frame
 
-    def __threshold(self, img):
-        img[img > self._th] = 255
-        img[img <= self._th] = 0
+#     def __threshold(self, img):
+#         img[img > self._th] = 255
+#         img[img <= self._th] = 0
 
-        return img
+#         return img
 
-    def __reshape_data(self, frame, mask):
-        frame = util.rgb2ycrcb(frame)
-        skin = self.__apply_mask(frame, mask)
+#     def __reshape_data(self, frame, mask):
+#         frame = util.rgb2ycrcb(frame)
+#         skin = self.__apply_mask(frame, mask)
 
-        X = util.mat2vec(skin)
-        y = util.mat2vec(mask)
+#         X = util.mat2vec(skin)
+#         y = util.mat2vec(mask)
 
-        nz = np.where(y != 0)[0]
-        X = X[nz]
-        X = X[:, self._ch:]
+#         nz = np.where(y != 0)[0]
+#         X = X[nz]
+#         X = X[:, self._ch:]
 
-        return X
+#         return X
 
 
 class SkinClassifier():
@@ -118,7 +116,7 @@ class SkinClassifier():
             p = p.reshape((sh[0], sh[1]))
             p[p == 1] = 255
 
-            skin = img
+            skin = img.copy()
             skin[p == 0] = 0
 
             return skin, p
