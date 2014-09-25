@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from blobDetector import MyBlobDetector
+from blob import MyBlobDetector
 
 
 class PointDetector():

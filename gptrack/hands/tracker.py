@@ -10,8 +10,7 @@ from util import gray2rgb
 class PointTracker():
 
     def __init__(self, prev, pts, tracker=cv2.calcOpticalFlowPyrLK):
-        self._prev = prev
-        self._pts = pts
+        self._prev, self._pts = prev, pts
         self._tracker = tracker
 
     def run(self, curr):
@@ -20,7 +19,6 @@ class PointTracker():
             self._pts, a, b = self._tracker(self._prev, curr, pts)
 
         self._prev = curr
-
         return self._pts
 
     def show(self, w='pts'):
