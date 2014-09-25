@@ -8,7 +8,7 @@ from conncomp import ConnComps
 
 class MyBlobDetector():
 
-    def __init__(self, num_comp=2, min_elem=1500):
+    def __init__(self, num_comp=2, min_elem=750):
         self._nc = num_comp
         self._me = min_elem
         self._cc = ConnComps()

@@ -18,12 +18,12 @@ class UpDown():
 
         y = self._pts[:, 3]
         df = np.diff(y)
-        th = np.abs(df.max() - df.min())*0.75/2
+        th = np.abs(df.max() - df.min())*0.7/2
         sign = np.sign(df)
 
-        ud = sign.copy()
+        ud = -sign.copy()
         ud[np.abs(df) < th] = 0
-        return (ud, self._nframe)
+        return (ud, self._nframe[0:-1])
 
     def __remove_non_detect(self):
         idx = ((pts[:, 1] != self._miss) & (pts[:, 2] != self._miss) &
