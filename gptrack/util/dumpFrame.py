@@ -7,7 +7,7 @@ import os
 
 class DumpFrame():
 
-    def __init__(self, src, dst, nskip=5000, fps=25):
+    def __init__(self, src, dst, nskip=5000, fps=100):
         self._src = src
         self._dst = dst
         self._nskip = nskip
@@ -15,12 +15,11 @@ class DumpFrame():
 
     def run(self):
         vc = cv2.VideoCapture(self._src)
-        dst = self._dst + os.path.basename(self._src)
+        dst = os.path.join(self._dst, os.path.basename(self._src))
         count = 0
 
         while vc.isOpened():
             ret, frame = vc.read()
-
             cv2.imshow('frame', frame)
             key = cv2.waitKey(1000/self._fps)
 

@@ -13,24 +13,19 @@ class ConnComps():
     def run(self, img):
         label = np.int32(img.copy())
         ncomp = 1
-
         while True:
             pt = self.__find_seed(label)
             if not pt:
                 break
-
             cv2.floodFill(label, None, pt, ncomp)
             ncomp += 1
-
         return label
 
     def __find_seed(self, img):
         tmp = np.where(img == 255)
         pt = ()
-
         if tmp[0].any() and tmp[1].any():
             pt = (tmp[1][0], tmp[0][0])
-
         return pt
 
 

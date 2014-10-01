@@ -2,9 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import cv2
-import numpy as np
 
-from util import rgb2ycrcb
 from sklearn.externals import joblib
 from sklearn.ensemble import RandomForestClassifier
 
@@ -49,37 +47,37 @@ class SkinClassifier():
         self._ready = True
 
 
-class SkinClassifierSoft():
-    pass
+# class SkinClassifierSoft():
+#     pass
 
 
-class SkinThresholder():
+# class SkinThresholder():
 
-    def __init__(self, frame, mask, f=1.5):
-        self._f = f
-        self._th = self.__calc_thresh(frame, mask)
+#     def __init__(self, frame, mask, f=1.5):
+#         self._f = f
+#         self._th = self.__calc_thresh(frame, mask)
 
-    def run(self, frame):
-        if self._th:
-            frame = rgb2ycrcb(frame)
-            cr, cb = frame[:, :, 1], frame[:, :, 2]
-            mask = np.zeros((frame.shape[0], frame.shape[1]), np.uint8)
-            mask[(cr >= self._th['cr'][0]) & (cr <= self._th['cr'][1]) &
-                 (cb >= self._th['cb'][0]) & (cb <= self._th['cb'][1])] = 255
-        skin = frame.copy()
-        skin[mask == 0] = 0
-        return skin, mask
+#     def run(self, frame):
+#         if self._th:
+#             frame = rgb2ycrcb(frame)
+#             cr, cb = frame[:, :, 1], frame[:, :, 2]
+#             mask = np.zeros((frame.shape[0], frame.shape[1]), np.uint8)
+#             mask[(cr >= self._th['cr'][0]) & (cr <= self._th['cr'][1]) &
+#                  (cb >= self._th['cb'][0]) & (cb <= self._th['cb'][1])] = 255
+#         skin = frame.copy()
+#         skin[mask == 0] = 0
+#         return skin, mask
 
-    def __calc_thresh(self, frame, mask):
-        frame = rgb2ycrcb(frame)[mask != 0]
-        cr, cb = frame[:, 1], frame[:, 2]
-        pcr = [cr.mean(), np.sqrt(cr.var())]
-        pcb = [cb.mean(), np.sqrt(cb.var())]
+#     def __calc_thresh(self, frame, mask):
+#         frame = rgb2ycrcb(frame)[mask != 0]
+#         cr, cb = frame[:, 1], frame[:, 2]
+#         pcr = [cr.mean(), np.sqrt(cr.var())]
+#         pcb = [cb.mean(), np.sqrt(cb.var())]
 
-        f = self._f
-        th = {'cr': [pcr[0] - f * pcr[1], pcr[0] + f * pcr[1]],
-              'cb': [pcb[0] - f * pcb[1], pcb[0] + f * pcb[1]]}
-        return th
+#         f = self._f
+#         th = {'cr': [pcr[0] - f * pcr[1], pcr[0] + f * pcr[1]],
+#               'cb': [pcb[0] - f * pcb[1], pcb[0] + f * pcb[1]]}
+#         return th
 
 
 if __name__ == '__main__':
