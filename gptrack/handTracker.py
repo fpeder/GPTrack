@@ -31,22 +31,25 @@ class State():
 
 class HandTracker():
 
-    def __init__(self, model='data/model/gopro.pkl'):
+    def __init__(self, model='data/model/gopro.pkl', nframe=300):
         self._hd = HandsDetector(model)
+        self._nframe = nframe
         self._tracker = None
         self._vc = None
 
     def run(self, vf):
         self._vc = cv2.VideoCapture(vf)
-        state = State(350)
+        state = State(self._nframe)
         strum = Strum()
 
         while self._vc.isOpened():
             try:
                 ret, frame = self._vc.read()
-                frameg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            except TypeError:
+                assert frame.any()
+            except AttributeError:
                 break
+
+            frameg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
             if state.reinit():
                 hands = self._hd.run(frame)
@@ -104,7 +107,6 @@ class HandTracker():
 
 if __name__ == '__main__':
     import argparse
-    import cPickle as pickle
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--infile", type=str, required=True,
@@ -116,4 +118,4 @@ if __name__ == '__main__':
     trj = ht.run(vf=args.infile)
 
     if args.outfile:
-        pickle.dump(trj, open(args.outfile, 'w'))
+        trj.save(args.outfile)

@@ -4,38 +4,40 @@
 import numpy as np
 import cPickle as pickle
 import os
-import pylab as plt
 
 
 class Strum():
 
-    def __init__(self):
+    def __init__(self, miss=-1):
+        self._miss = -1
         self._left = np.array([])
         self._right = np.array([])
 
-    def up_down(self):
-        pass
-
     def append(self, pts):
-        if self._left.any() and self._right.any():
+        if self.__have_pts():
             self._left = np.vstack((self._left, pts[0]))
             self._right = np.vstack((self._right, pts[1]))
         else:
-            self._left, self._right = pts
-
-    def plot(self, hand='right', coord=2):
-        if self._pts.any():
-            if hand == 'right':
-                pts = self._right[:, coord]
-                plt.plot(pts)
-                plt.show()
+            self._left, self._right = pts[0], pts[1]
 
     def save(self, fn):
-        pickle.dump(self._pts, open(fn, 'w'))
+        if self.__have_pts():
+            pickle.dump((self._left, self._right), open(fn, 'w'))
 
     def load(self, fn):
         assert os.path.exists(fn)
-        self._pts = pickle.load(open(fn, 'r'))
+        self._left, self._right = pickle.load(open(fn, 'r'))
+
+    def __have_pts(self):
+        return self._left.any() and self._right.any()
+
+    @property
+    def left(self):
+        return self._left
+
+    @property
+    def right(self):
+        return self._right
 
 
 if __name__ == '__main__':

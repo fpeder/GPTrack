@@ -1,11 +1,12 @@
 #!/bin/bash
 
-path="data/strokes"
+path=$1
+out=$2
 
-for file in do.pck mi.pck sol.pck lam.pck 
+for file in Am_n.pck Am_r.pck Am_s.pck
 do
     ./util/updown.py -i $path/$file -o $path/ud.$file
     ./util/plot.py $path/ud.$file
 done
 
-convert $path/ud.{'do','mi','sol','lam'}.pck.png -append stokes.png
+convert $path/ud.{'Am_n','Am_r','Am_s'}.pck.png -append $out

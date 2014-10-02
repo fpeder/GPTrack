@@ -56,8 +56,8 @@ class MyBlobDetector():
             nelem = len(cc[cc == label])
             if nelem > self._me:
                 idx = cc == label
-                (x, y) = np.where(cc == label)
-                pts = np.array([y, x]).T
+                (y, x) = np.where(cc == label)
+                pts = np.array([x, y]).T
                 mycomps.append(MyComp(label, idx, pts))
 
         comps = self.__get_biggest(mycomps)

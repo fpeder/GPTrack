@@ -2,56 +2,62 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import pylab as plt
+
+from scipy.ndimage.filters import gaussian_filter1d
 
 
-class Peaks():
-    def __init__(self, k=10, h=3):
-        self._k = k
-        self._h = h
-        self._peaks = np.array([])
+class FindPeaks():
 
-    def run(self, sig):
-        a = [self.__s1(sig, i) for i in range(len(sig))]
-        m, s = a[a > 0].mean(), a[a > 0].std()
+    def __init__(self, slopeth, ampf, var, ngroup, debug=False):
+        self._slth = slopeth
+        self._ampf = ampf
+        self._var = var
+        self._w = np.round(ngroup/2 + 1)
+        self._debug = debug
 
-        O = [[x, i] for i, x in enumerate(a) if x > 0 and (x-m) > (self._h*s)]
+    def run(self, y):
+        y = y - y.mean()
+        d = self.__deriv(y)
+        d = gaussian_filter1d(d, self._var) if self._var else d
+        peaks = []
+        peaks = self.__asd(y, d, peaks, lambda x, y: x < y)
+        peaks = self.__asd(-y, d, peaks, lambda x, y: x > y)
 
-        for i in np.arange(len(O)):
-            for j in np.arange(i+1, i+self._k+1):
-                if j < len(O):
-                    if O[i][0] < O[j][0]:
-                        O[i][0] = -1
-                    else:
-                        O[j][0] = -1
-
-        O = np.array(O)
-        self._peaks = O[O[:, 0] != -1][:, 1].astype(np.int32)
-        return self._peaks
-
-    def __s1(self, x, i):
-        idx = np.arange(i-self._k, i)
-        idx = idx[idx >= 0]
-        max1 = (x[idx] - x[i]).max() if idx.any() else 0
-
-        idx = np.arange(i+1, i+self._k+1)
-        idx = idx[idx < len(x)]
-        max2 = (x[idx] - x[i]).max() if idx.any() else 0
-
-        return (max1 + max2)/2
-
-    def plot(self, sig):
-        if self._peaks.any():
-            plt.plot(sig)
-            plt.plot(self._peaks, sig[self._peaks], 'o')
+        if self._debug:
+            import pylab as plt
+            plt.plot(y)
+            plt.plot(peaks, y[peaks], 'o')
             plt.show()
+
+        return peaks
+
+    def __asd(self, y, d, peaks, f):
+        N = len(d)-1
+        AMP_TH = y.max()/2 * self._ampf
+
+        for i in np.arange(0, N):
+            if f(np.sign(d[i]), np.sign(d[i+1])):
+                if f(d[i]-d[i+1], self._slth * y[i]):
+                    if y[i] > AMP_TH or y[i+1] > AMP_TH:
+                        #k = i-self._w if i-self._w > 0 else 0
+                        #l = i+self._w if i+self._w < N else N
+                        #yy = y[k:l]
+                        peaks.append(i)
+        return peaks
+
+    def __deriv(self, x):
+        d = np.zeros(x.shape)
+        d[1:-1] = (np.roll(x, 1)[1: -1] - np.roll(x, -1)[1:-1]) / 2.
+        d[0] = x[1] - x[0]
+        d[-1] = x[-1] - x[-2]
+        return d
 
 
 if __name__ == '__main__':
-    x = np.random.rand(100)
-    x[10] = 10
-    x[50] = 15
+    import cPickle as pickle
 
-    p = Peaks()
-    p.run(x)
-    p.plot(x)
+    pts = pickle.load(file('data/strokes/Am_r.pck'))
+    y = pts[1][:, 1]
+
+    fp = FindPeaks(0, 0.2, 10, 5, False)
+    fp.run(y)

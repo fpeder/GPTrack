@@ -17,7 +17,7 @@ class Hands():
             self.__sort()
 
     def __sort(self):
-        if self._left.cent[1] < self._right.cent[1]:
+        if self._left.cent[0] < self._right.cent[0]:
             self._left, self._right = self._right, self._left
 
     def valid(self):
@@ -69,5 +69,4 @@ class Hand():
     @property
     def cent(self):
         return self._cent
-
 
