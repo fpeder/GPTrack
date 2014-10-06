@@ -25,10 +25,6 @@ class UpDown():
         ud = np.zeros(y.shape)
         ud[peaks] = np.sign(y[peaks])
 
-        #import pylab as plt
-        #plt.plot(ud)
-        #plt.show()
-
         return ud, self._nframe
 
     def __remove_non_detect(self):

@@ -1,13 +1,12 @@
 #!/bin/bash
 
-if [ $# -ne 3 ]; then
-    echo "$0 <strokes> <chord> <output>"
+if [ $# -ne 2 ]; then
+    echo "$0 <strokes dir> <chord>"
     exit
 fi
 
 path=$1
 c=$2
-out=$3
 
 for f in n.pck r.pck s.pck
 do
@@ -16,5 +15,5 @@ do
     ./util/plot.py $path/ud.$file
 done
 
-convert $path/ud.$c"_"{s,n,r}.pck.png -append $out
+convert $path/ud.$c"_"{s,n,r}.pck.png -append $c.png
 

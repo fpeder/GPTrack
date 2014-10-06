@@ -25,7 +25,7 @@ class Strum():
     def load(self, fn):
         assert os.path.exists(fn)
         tmp = pickle.load(open(fn, 'r'))
-        self._right = tmp[1] if len(tmp == 2) else tmp
+        self._right = tmp[1] if len(tmp) == 2 else tmp
 
     def __have_pts(self):
         return self._right.any()
