@@ -58,7 +58,7 @@ class HandTracker():
             else:
                 pts = self._tracker.run(frameg)
 
-            strum.append(pts)
+            strum.append(pts.right)
             state.update()
 
             self.__show_points(frame, pts)

@@ -10,30 +10,25 @@ class Strum():
 
     def __init__(self, miss=-1):
         self._miss = -1
-        self._left = np.array([])
         self._right = np.array([])
 
     def append(self, pts):
         if self.__have_pts():
-            self._left = np.vstack((self._left, pts[0]))
             self._right = np.vstack((self._right, pts[1]))
         else:
-            self._left, self._right = pts[0], pts[1]
+            self._right
 
     def save(self, fn):
         if self.__have_pts():
-            pickle.dump((self._left, self._right), open(fn, 'w'))
+            pickle.dump(self._right, open(fn, 'w'))
 
     def load(self, fn):
         assert os.path.exists(fn)
-        self._left, self._right = pickle.load(open(fn, 'r'))
+        tmp = pickle.load(open(fn, 'r'))
+        self._right = tmp[1] if len(tmp == 2) else tmp
 
     def __have_pts(self):
-        return self._left.any() and self._right.any()
-
-    @property
-    def left(self):
-        return self._left
+        return self._right.any()
 
     @property
     def right(self):
