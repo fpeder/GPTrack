@@ -3,6 +3,7 @@
 
 import cv2
 import numpy as np
+import cPickle as pickle
 
 
 class Hands():
@@ -25,6 +26,10 @@ class Hands():
 
     def get_points(self):
         return [self._left.cent, self._right.cent]
+
+    def save(self, fn):
+        with open(fn, 'w') as f:
+            pickle.dump({'left': self._left, 'right': self._right}, f)
 
     @property
     def left(self):
@@ -70,3 +75,10 @@ class Hand():
     def cent(self):
         return self._cent
 
+    @property
+    def box(self):
+        return self._box
+
+    @property
+    def mask(self):
+        return self._mask

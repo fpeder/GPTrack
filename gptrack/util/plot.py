@@ -10,9 +10,20 @@ if __name__ == '__main__':
 
     fn = sys.argv[1]
     ud, frame = pickle.load(open(fn, 'r'))
-
-    plt.plot(frame, ud)
+    #plt.subplot(2, 1, 1)
+    asd, = plt.plot(frame, ud)
+    #plt.ylabel('detect')
     plt.title(os.path.basename(fn))
-    plt.xlabel("frame")
-    plt.ylabel("stroke")
+
+    gt = fn.replace('ud.', 'gt.')
+    if os.path.exists(gt):
+        udgt = pickle.load(open(gt, 'r'))
+        #plt.subplot(2, 1, 2)
+        qwe, = plt.plot(frame[udgt != 0], udgt[udgt != 0], 'ro')
+        #plt.ylabel("gt")
+
+    plt.ylim([-1.1, 1.1])
+    plt.xlabel('frame')
+    plt.ylabel('stroke')
+    plt.legend([asd, qwe], ['my', 'gt'])
     plt.savefig(fn + '.png')

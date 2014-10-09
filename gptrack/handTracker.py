@@ -7,6 +7,7 @@ import numpy as np
 from hands.detector import HandsDetector
 from hands.tracker import PointTracker
 from strum.strum import Strum
+from chords import ChordClassifier
 
 
 class State():
@@ -33,6 +34,7 @@ class HandTracker():
 
     def __init__(self, model='data/model/gopro.pkl', nframe=300):
         self._hd = HandsDetector(model)
+        self._cd = ChordClassifier()
         self._nframe = nframe
         self._tracker = None
         self._vc = None
@@ -58,12 +60,16 @@ class HandTracker():
             else:
                 pts = self._tracker.run(frameg)
 
-            strum.append(pts[1])
+            strum.append(pts)
             state.update()
 
+            #self._cd.run(frame, hands.left)
             self.__show_points(frame, pts)
-            if cv2.waitKey(1) == ord('q'):
+            key = cv2.waitKey(1)
+            if key == ord('q'):
                 break
+            elif key == ord('s'):
+                hands.save('hands.pck')
 
         return strum
 
@@ -73,36 +79,6 @@ class HandTracker():
             pt = pt.astype(np.int32)
             cv2.circle(frame, tuple(pt), 8, (255, 0, 0), -1)
         cv2.imshow('pts', frame)
-
-
-# class State():
-#     REINIT = 1
-#     REINIT_QUICK = 2
-#     TRACK = 3
-
-#     def __init__(self, init=True, quick=False, limit1=25, limit2=100):
-#         self._init = init
-#         self._quick = quick
-#         self._c1, self._c2 = 0, 0
-#         self._l1, self._l2 = limit1, limit2
-
-#     def get(self):
-#         if self._init and not self._quick:
-#             return self.REINIT
-#         if self._init and self._quick:
-#             return self.REINIT_QUICK
-#         if not self._init:
-#             return self.TRACK
-
-#     def update(self):
-#         self._c1 += 1
-#         self._c2 += 1
-#         self._init, self._quick = False, True
-#         if self._c1 > self._l1:
-#             self._init, self._c1 = True, 0
-#             self._quick = True
-#             if self._c2 > self._l2:
-#                 self._quick, self._c2 = False, 0
 
 
 if __name__ == '__main__':

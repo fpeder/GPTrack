@@ -4,6 +4,7 @@
 import numpy as np
 import cPickle as pickle
 import os
+import sys
 
 
 class Strum():
@@ -16,11 +17,13 @@ class Strum():
         if self.__have_pts():
             self._right = np.vstack((self._right, pts[1]))
         else:
-            self._right
+            self._right = pts[1]
 
     def save(self, fn):
         if self.__have_pts():
             pickle.dump(self._right, open(fn, 'w'))
+        else:
+            sys.stderr.write('err: strum.py: no pts')
 
     def load(self, fn):
         assert os.path.exists(fn)
