@@ -5,8 +5,8 @@ if [ $# -ne 2 ]; then
     exit
 fi
 
-path=$1
-dest=$2
+path=$(readlink -m $1)
+dest=$(readlink -m $2)
 prog=./handTracker.py
 
 for c in Am_ E_ G_

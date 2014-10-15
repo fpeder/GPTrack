@@ -32,12 +32,14 @@ class State():
 
 class HandTracker():
 
-    def __init__(self, model='data/model/gopro.pkl', nframe=300):
+    def __init__(self, model='data/model/gopro.pkl', nframe=300,
+                 display=False):
         self._hd = HandsDetector(model)
         self._cd = ChordClassifier()
         self._nframe = nframe
         self._tracker = None
         self._vc = None
+        self._display = display
 
     def run(self, vf):
         self._vc = cv2.VideoCapture(vf)
@@ -63,13 +65,16 @@ class HandTracker():
             strum.append(pts)
             state.update()
 
-            #self._cd.run(frame, hands.left)
-            self.__show_points(frame, pts)
-            key = cv2.waitKey(1)
-            if key == ord('q'):
-                break
-            elif key == ord('s'):
-                hands.save('hands.pck')
+            self._cd.run(frame, hands.left)
+
+            if self._display:
+                self.__show_points(frame, pts)
+
+                key = cv2.waitKey(1)
+                if key == ord('q'):
+                    break
+                elif key == ord('s'):
+                    hands.save('hands.pck')
 
         return strum
 
@@ -88,9 +93,11 @@ if __name__ == '__main__':
     parser.add_argument("-i", "--infile", type=str, required=True,
                         help="input video file")
     parser.add_argument("-o", "--outfile", type=str, help="output sequence")
+    parser.add_argument("-d", "--display", action="store_true")
+
     args = parser.parse_args()
 
-    ht = HandTracker()
+    ht = HandTracker(display=args.display)
     trj = ht.run(vf=args.infile)
 
     if args.outfile:
