@@ -22,15 +22,14 @@ def fix(count):
 class Overlay():
     UP, DOWN = 1, -1
 
-    def __init__(self, src, nframe=30, r=None):
+    def __init__(self, src, nframe=30):
         self._src = src
         self._nf = nframe
-        self._r = r
         self._colors = {'1': (255, 0, 0), '-1': (0, 0, 255)}
         self._mask = {'1': cv2.imread('data/up.png', GRAY),
                       '-1': cv2.imread('data/down.png', GRAY)}
 
-    def run(self, seq, updown):
+    def run(self, updown):
         for s in [self.UP, self.DOWN]:
             for i in np.where(updown == s)[0]:
                 for x in i + np.arange(-self._nf, self._nf):
@@ -41,9 +40,6 @@ class Overlay():
                     img = self.__load(x)
                     mask = self._mask[str(s)]
                     img[mask > 0] = self._colors[str(s)]
-
-                    #pt = tuple(seq[x, :].astype(np.int32))
-                    #self.__draw(img, pt, s)
 
                     self.__save(img, x)
 
@@ -67,17 +63,16 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--src_dir', type=str, required=True)
-    parser.add_argument('-s', '--seq', type=str, required=True)
     parser.add_argument('-i', '--updown', type=str, required=True)
+    parser.add_argument('-n', '--nframe', type=int)
     args = parser.parse_args()
 
-    src, seq, updown = args.src_dir, args.seq, args.updown
+    src, nframe, updown = args.src_dir, args.nframe, args.updown
+
     assert os.path.exists(src), 'dir'
-    assert os.path.exists(seq), 'seq'
     assert os.path.exists(updown), 'updown'
 
-    seq = pickle.load(file(seq))
     updown, _ = pickle.load(file(updown))
 
-    o = Overlay(src, 30, 18)
-    o.run(seq, updown)
+    o = Overlay(src, nframe) if nframe else Overlay(src)
+    o.run(updown)
