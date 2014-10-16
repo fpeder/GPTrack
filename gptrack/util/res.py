@@ -33,7 +33,6 @@ class PErr():
             s = i-self._w/2 if i-self._w/2 > 0 else 0
             e = i+self._w/2 if i+self._w/2 < N else N
             tmp = my[s:e]
-
             if len(tmp[tmp == val]) == 1:
                 count += 1
         return count
@@ -47,34 +46,72 @@ class PErr():
 class Results():
     MY = 'ud'
     GT = 'gt'
+    EXT = '.pck'
 
-    def __init__(self, path, chords, speed, w=75):
-        assert os.path.exists(path), 'path doesn\'t exist'
-        self._path = path
-        self._chords = chords
-        self._speed = speed
+    def __init__(self, path, chords, speed, fps, w=75):
+        self._path, self._chords, self._speed = path, chords, speed
+        self._fps = fps
         self._pe = PErr()
+        self._res = None
 
     def run(self):
         res = {}
-        for ch in self._chords:
-            for sp in self._speed:
-                base = '.' + ch + '_' + sp + '.pck'
-                my = os.path.join(self._path, self.MY + base)
-                gt = os.path.join(self._path, self.GT + base)
-                my, frame = pickle.load(open(my, 'r'))
-                gt = pickle.load(open(gt, 'r'))
-                res[ch + '_' + sp] = self._pe.run(my, gt)
-        return res
+        for fps in self._fps:
+            res['fps'] = fps
+            for ch in self._chors:
+                for sp in self._speed:
+                    name = '.' + ch + '_' + sp
+                    pe = self.__prob_of_error(name)
+                    res['fps'][name] = pe
+        self._res = res
+
+    def __prob_of_error(self, base):
+        my, gt = self.__load(base)
+        return self._pe.run(my, gt)
+
+    def __load(self, base):
+        base = base + self.EXT
+        my = os.path.join(self._path, self.MY + base)
+        gt = os.path.join(self._path, self.GT + base)
+        my, frame = pickle.load(open(my, 'r'))
+        gt = pickle.load(open(gt, 'r'))
+        return my, gt
+
+    # def __repr__(self):
+    #     res = ''
+    #     if self._res:
+    #         res += '---' + self._fps + '---\n'
+    #         for ch in self._chords:
+    #             for sp in self._speed:
+    #                 name = ch + '_' + sp
+    #                 res += name + ' ' + str(self._res[ch + '_' + sp][-1])
+    #                 res += '\n'
+    #     return res
+
+    # def to_latex(self):
+    #     res = ''
+    #     if self._res:
+    #         for ch in self._chords:
+    #             res += '\multicolumn{3}{*}{' + str(ch) + '}'
+    #             for sp in ['s', 'n', 'r']:
+    #                 name = ch + '_' + sp
+    #                 pe = np.round(self._res[name][1], decimals=2)
+    #                 res += '& ' + str(pe)
+    #             res += '\\\\\ \n'
+    #     return res
 
 
 if __name__ == '__main__':
     import argparse
 
-    parser = argpars.ArgumentParser()
-    parser.add_argument('-d', '--stroke', )
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--stroke', type=str, required=True)
+    parser.add_argument('-f', '--fps', type=str, required=True)
+    args = parser.parse_args()
 
-    res = Results('data/strokes/100', ['Am', 'E', 'G'], ['s', 'r', 'n'])
-    r = res.run()
+    path, fps = args.stroke, args.fps
+    assert os.path.exists(path), 'path'
 
-    print r
+    res = Results(path, ['Am', 'E', 'G'], ['s', 'r', 'n'], fps)
+    res.run()
+    print res.to_latex()
