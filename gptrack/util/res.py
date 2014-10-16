@@ -69,6 +69,11 @@ class Results():
 
 
 if __name__ == '__main__':
+    import argparse
+
+    parser = argpars.ArgumentParser()
+    parser.add_argument('-d', '--stroke', )
+
     res = Results('data/strokes/100', ['Am', 'E', 'G'], ['s', 'r', 'n'])
     r = res.run()
 

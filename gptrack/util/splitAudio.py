@@ -18,11 +18,13 @@ class SplitAudio():
         count = 0
         fn = self.__make_fn()
 
-        for start, time in self.__get_times(updown, frame):
-            outfile = fn + '.' + str(count) + '.' + self.ACODEC
+        for start, time, direction in self.__get_times(updown, frame):
+            d = 'up' if direction == 1 else 'down'
+            outfile = fn + '.' + str(count) + '.' + d + '.' + self.ACODEC
             outfile = os.path.join(self._dst, outfile)
 
-            cmd = self.FFMPEG + " -i " + self._src + " -ss " + str(start) + " -t " + str(time) + " -f wav " + outfile
+            cmd = self.FFMPEG + " -i " + self._src + " -ss " + str(start) + \
+                  " -t " + str(time) + " -f wav " + outfile
 
             os.system(cmd)
 
@@ -35,10 +37,11 @@ class SplitAudio():
 
     def __get_times(self, updown, frame):
         idx = np.where(updown != 0)[0]
+        direction = updown[idx]
         start, time = frame[idx], np.diff(frame[idx])
         start = np.around(start[:-1] * 1./self._fps, decimals=2)
         time = np.around(time * 1./self._fps, decimals=2)
-        return zip(start, time)
+        return zip(start, time, direction)
 
 
 if __name__ == '__main__':
