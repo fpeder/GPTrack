@@ -47,9 +47,11 @@ class Results():
     MY = 'ud'
     GT = 'gt'
     EXT = '.pck'
+    SEP = '_'
 
     def __init__(self, path, chords, speed, fps, w=75):
-        self._path, self._chords, self._speed = path, chords, speed
+        self._path = path
+        self._names = [c + '_' + s for c in chords for s in speed]
         self._fps = fps
         self._pe = PErr()
         self._res = None
@@ -57,48 +59,49 @@ class Results():
     def run(self):
         res = {}
         for fps in self._fps:
-            res['fps'] = fps
-            for ch in self._chors:
-                for sp in self._speed:
-                    name = '.' + ch + '_' + sp
-                    pe = self.__prob_of_error(name)
-                    res['fps'][name] = pe
+            res[str(fps)] = {}
+            path = os.path.join(self._path, str(fps))
+            for x in self._names:
+                res[str(fps)][x] = self.__prob_of_error(path, x)
         self._res = res
 
-    def __prob_of_error(self, base):
-        my, gt = self.__load(base)
+    def __prob_of_error(self, path, base):
+        my, gt = self.__load(path, base)
         return self._pe.run(my, gt)
 
-    def __load(self, base):
-        base = base + self.EXT
-        my = os.path.join(self._path, self.MY + base)
-        gt = os.path.join(self._path, self.GT + base)
+    def __load(self, path, base):
+        base = '.' + base + self.EXT
+        my = os.path.join(path, self.MY + base)
+        gt = os.path.join(path, self.GT + base)
         my, frame = pickle.load(open(my, 'r'))
         gt = pickle.load(open(gt, 'r'))
         return my, gt
 
-    # def __repr__(self):
-    #     res = ''
-    #     if self._res:
-    #         res += '---' + self._fps + '---\n'
-    #         for ch in self._chords:
-    #             for sp in self._speed:
-    #                 name = ch + '_' + sp
-    #                 res += name + ' ' + str(self._res[ch + '_' + sp][-1])
-    #                 res += '\n'
-    #     return res
+    def __repr__(self):
+        r, res = self._res, ''
+        for key in r.keys():
+            res += '--- ' + key + ' ---\n'
+            for name in self._names:
+                pe = np.round(r[key][name][-1], decimals=2)
+                res += name + ' ' + str(pe) + '\n'
+        return res
 
-    # def to_latex(self):
-    #     res = ''
-    #     if self._res:
-    #         for ch in self._chords:
-    #             res += '\multicolumn{3}{*}{' + str(ch) + '}'
-    #             for sp in ['s', 'n', 'r']:
-    #                 name = ch + '_' + sp
-    #                 pe = np.round(self._res[name][1], decimals=2)
-    #                 res += '& ' + str(pe)
-    #             res += '\\\\\ \n'
-    #     return res
+    def to_latex(self):
+        res = ''
+        for fps in self._fps:
+            res += '\\multirow{3}{*}{' + str(fps) + '} '
+            chords = list(set([x.split(self.SEP)[0] for x in self._names]))
+            num = len(self._names)
+            nspeed = num/len(chords)
+            asd = [self._names[i:i+nspeed] for i in range(0, num, nspeed)]
+            curr = self._res[str(fps)]
+            for i, x in enumerate(asd):
+                res += '& ' + chords[i]
+                tmp = [str(np.round(curr[i][-1], decimals=2)) for i in x]
+                res += ' & ' + ' & '.join(tmp)
+                res += '\\\\ \n'
+            res += '\midrule \n'
+        return res
 
 
 if __name__ == '__main__':
@@ -112,6 +115,7 @@ if __name__ == '__main__':
     path, fps = args.stroke, args.fps
     assert os.path.exists(path), 'path'
 
-    res = Results(path, ['Am', 'E', 'G'], ['s', 'r', 'n'], fps)
+    res = Results(path, ['Am', 'E', 'G'], ['s', 'n', 'r'], [100, 75, 50])
     res.run()
+
     print res.to_latex()
