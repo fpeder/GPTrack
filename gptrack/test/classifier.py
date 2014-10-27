@@ -1,35 +1,41 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
+from config import ModelConfig, DataConfig, DbConfig
 from data import DataHandler, DataBalancer
+from blockproc import BlockProcess
+from features import Hist
 
 from sklearn.externals import joblib
+from sklearn.ensemble import RandomForestClassifier
 
 
-class SkinClassifier():
+class SkinTrainer():
 
-    def __init__(self, model, labels, features, discard=None, balance=True):
-        self._model = model
-        self._labels = labels
-        self._discard = discard
-        self._features = features
-        self._balance = balance
+    def __init__(self, modconf, dataconf, dbconf):
+        self._model = modconf.model
+        self._config = {'model': modconf, 'data': dataconf}
+        self._dh = DataHandler(dataconf, dbconf, modconf.features)
 
-    def predicit(self, img):
-        X, _ = self._features.run(img)
-        pass
-
-    def train(self, path, ext='.jpg,', prefix='gt.', output=None):
-        dh = DataHandler(path, self._labels, self._features)
-        X, y = dh.run()
-        if self._balance:
-            db = DataBalancer()
-            X, y = db.run(X, y)
+    def run(self):
+        X, y = self._dh.run()
+        if self._config['data'].balance:
+            X, y = DataBalancer().run(X, y)
 
         self._model.fit(X, y)
-        if output:
-            joblib.dump((self._model, self._labels), output)
 
-    def load(self, fn):
-        self._model, self._labels = joblib.load(fn)
+    def save(self, fn):
+        pass
+
+
+if __name__ == '__main__':
+    labels = {'0': [0, 0, 0], '1': [255, 0, 0], '2': [0, 0, 255]}
+    model = RandomForestClassifier(min_samples_split=1, n_estimators=20)
+    featdesc = [[BlockProcess, 8, Hist(16)]]
+
+    modconf = ModelConfig(model, featdesc)
+    dataconf = DataConfig(labels, ds=4, discard=None)
+    dbconf = DbConfig('db')
+
+    st = SkinTrainer(modconf, dataconf, dbconf)
+    st.run()

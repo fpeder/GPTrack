@@ -3,10 +3,10 @@
 
 import cv2
 import numpy as np
-import os
 
-from glob import glob
-from features import Features, BlockHistogram, Pixel
+from features import Features, Hist
+from blockproc import BlockProcess
+from config import DataConfig, DbConfig
 
 
 def split(img):
@@ -65,42 +65,43 @@ class DataBalancer():
 
 class DataHandler():
 
-    def __init__(self, path, labels, feat, discard=None, ext='.jpg',
-                 prefix='gt.'):
-        self._path = path
-        self._ext = ext
-        self._prefix = prefix
-        self._c2l = Color2Label(labels, discard)
-        self._feat = feat
+    def __init__(self, dataconf, dbconf, featdesc):
+        self._config = {'data': dataconf, 'db': dbconf}
+        self._c2l = Color2Label(dataconf.labels, dataconf.discard)
+        self._features = Features(featdesc)
 
     def run(self):
-        assert os.path.exists(self._path), 'path...'
-        query = '[!' + self._prefix + ']*' + self._ext
-
-        X, y = np.array([]), np.array([])
-
-        for fn in glob(os.path.join(self._path, query)):
-            img, gt = self.__load_images(fn)
-            gt = self._c2l.run(gt)
-            tx, ty = self._feat.run(img, gt)
-
+        X = np.array([])
+        y = np.array([])
+        for im, gt in self._config['db'].glob():
+            im, gt = self.__load_data(im, gt)
+            tx, ty = self._features.run(im, gt)
             X = np.vstack((X, tx)) if X.any() else tx
             y = np.hstack((y, ty)) if y.any() else ty
-
         return X, y
 
-    def __load_images(self, fn):
-        fngt = os.path.basename(fn).split(self._ext)[0]
-        fngt = os.path.join(self._path, self._prefix + fngt + '.png')
-        return cv2.imread(fn), cv2.imread(fngt)
+    def __load_data(self, img, gt):
+        im = cv2.imread(img)
+        gt = cv2.imread(gt)
+        ds = self._config['data'].ds
+        if ds:
+            im = im[::ds, ::ds]
+            gt = gt[::ds, ::ds]
+        gt = self._c2l.run(gt)
+        return im, gt
 
 
 if __name__ == '__main__':
     labels = {'0': [0, 0, 0], '1': [255, 0, 0], '2': [0, 0, 255]}
-    feat = Features((BlockHistogram(16, 16), Pixel()), )
+    models = RandomForestClassifier(min_samples_split=1, n_estimators=20)
+    featdesc = [[BlockProcess, 8, Hist(16)]]
 
-    dh = DataHandler('.', labels, feat)
+    modconf = ModelConfig(model, labels)
+    dataconf = DataConfig(labels, ds=4, discard=None)
+    dbconf = DbConfig('db')
+
+    dh = DataHandler(dataconf, dbconf, featdesc)
     X, y = dh.run()
 
-    db = DataBalancer()
-    X, y = db.run(X, y)
+    import pdb; pdb.set_trace()
+    

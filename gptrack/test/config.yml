@@ -1,0 +1,14 @@
+labels:
+  - id: 0
+    color: [0,0,0]
+  - id: 1
+    color: [255, 0, 0]
+  - id: 2
+    color: [0, 0, 255]
+
+model: RandomForestClassifier(min_samples_split=1, n_estimators=20)
+
+features:
+  - kind: BlockProcess
+    size: 8
+    fun: Hist(16)

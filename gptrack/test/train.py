@@ -1,10 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import yaml
+
 from classifier import SkinClassifier
-from features import Features, BlockHistogram, Pixel
+from features import Hist
+from blockproc import BlockProcess
 
 from sklearn.ensemble import RandomForestClassifier
+
+
+def parse_config(conf):
+    conf = yaml.load(open(conf, 'r'))
+    model = eval(conf['model'])
+    feat = [[eval(x['kind']), x['size'], eval(x['fun'])]
+            for x in conf['features']]
+    labels = {}
+    for lab in conf['labels']:
+        labels[str(lab['id'])] = lab['color']
+    return model, labels, feat
+
 
 if __name__ == '__main__':
     import argparse
@@ -13,18 +28,16 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--db', type=str, required=True)
     parser.add_argument('-o', '--output', type=str, required=True)
-    parser.add_argument('-s', '--skip', type=int, default=1)
-    parser.add_argument('-w', '--block', type=int, default=16)
-    parser.add_argument('-n', '--nbins', type=int, default=16)
+    parser.add_argument('-c', '--config', type=str, required=True)
     args = parser.parse_args()
 
-    path, w, n, s = args.db, args.block, args.nbins, args.skip
+    path = args.db
     output = args.output
+    configf = args.config
+
     assert os.path.exists(path), '!path...'
+    assert os.path.exists(configf), '!config...'
 
-    labels = {'0': [0, 0, 0], '1': [255, 0, 0], '2': [0, 0, 255]}
-    feat = Features((BlockHistogram(w, w), Pixel()), s)
-    model = RandomForestClassifier(min_samples_split=1, n_estimators=20)
-
+    model, labels, feat = parse_config(configf)
     sc = SkinClassifier(model, labels, feat)
     sc.train(path, output=output)
