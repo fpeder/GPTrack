@@ -1,93 +1,69 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import cv2
+import numpy as np
+
+from data import DataHandler, DataBalancer
+from util import makeCallableString
 
 from sklearn.externals import joblib
 from sklearn.ensemble import RandomForestClassifier
+from os.path import exists
 
 
 class SkinClassifier():
 
-    def __init__(self, model='RandomForestClassifier',
-                 params='min_samples_split=1, n_estimators=20'):
-        self._model = eval(model + '(' + params + ')')
-        self._ready = False
-        self._labels = None
+    def __init__(self):
+        self._cls = None
+        self._dh = None
 
-    def train(self, X, y, labels=None):
-        self._labels = labels
-        self._model.fit(X, y)
-        self._ready = True
+    def train(self, config):
+        self._cls = self.__parse(config.model.cls)
+        self._dh = DataHandler(config.data, config.db, config.model.features)
+        X, y = self._dh.run()
+        if config.data.balance:
+            X, y = DataBalancer().run(X, y)
+        self._cls.fit(X, y)
 
     def run(self, img):
-        if self._ready:
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2YCR_CB)
-            sh = img.shape
-            X = img.reshape(sh[0] * sh[1], 3)
-            pred = self._model.predict(X)
-            pred = pred.reshape(sh[0], sh[1])
-
-            return self.__get_skin(img, pred)
+        M, N = img.shape[:-1]
+        X = self._dh.get_features(img)
+        y = self._cls.predict(X)
+        y = self._dh.reshape(y, M, N)
+        return self.__get_skin(img, y)
 
     def __get_skin(self, img, p):
         skin = img.copy()
-        skin[p != self._labels['skin']] = 0
+        skin[p != 1] = 0
         mask = p.copy()
-        mask[p == self._labels['skin']] = 255
+        mask = mask.astype(np.uint8)
+        mask[p == 1] = 255
         mask[mask != 255] = 0
         return skin, mask
 
     def save(self, fn):
-        if self._ready:
-            joblib.dump((self._model, self._labels), fn)
+        joblib.dump((self._cls, self._dh), fn)
 
     def load(self, fn):
-        self._model, self._labels = joblib.load(fn)
-        self._ready = True
+        assert exists, '!fn...'
+        self._cls, self._dh = joblib.load(fn)
 
-
-# class SkinClassifierSoft():
-#     pass
-
-
-# class SkinThresholder():
-
-#     def __init__(self, frame, mask, f=1.5):
-#         self._f = f
-#         self._th = self.__calc_thresh(frame, mask)
-
-#     def run(self, frame):
-#         if self._th:
-#             frame = rgb2ycrcb(frame)
-#             cr, cb = frame[:, :, 1], frame[:, :, 2]
-#             mask = np.zeros((frame.shape[0], frame.shape[1]), np.uint8)
-#             mask[(cr >= self._th['cr'][0]) & (cr <= self._th['cr'][1]) &
-#                  (cb >= self._th['cb'][0]) & (cb <= self._th['cb'][1])] = 255
-#         skin = frame.copy()
-#         skin[mask == 0] = 0
-#         return skin, mask
-
-#     def __calc_thresh(self, frame, mask):
-#         frame = rgb2ycrcb(frame)[mask != 0]
-#         cr, cb = frame[:, 1], frame[:, 2]
-#         pcr = [cr.mean(), np.sqrt(cr.var())]
-#         pcb = [cb.mean(), np.sqrt(cb.var())]
-
-#         f = self._f
-#         th = {'cr': [pcr[0] - f * pcr[1], pcr[0] + f * pcr[1]],
-#               'cb': [pcb[0] - f * pcb[1], pcb[0] + f * pcb[1]]}
-#         return th
+    def __parse(self, desc):
+        tmp = makeCallableString(desc)
+        return eval(tmp)
 
 
 if __name__ == '__main__':
+    import cv2
+    import sys
     import pylab as plt
 
+    img = cv2.imread(sys.argv[1])
+    assert img.any(), '!img...'
+
     sc = SkinClassifier()
-    sc.load('data/isabel.pkl')
+    sc.load('model/asd.pkl')
+    y = sc.run(img)
 
-    img = cv2.imread('db/lam.mov.2.jpg')
-    asd = sc.test(img)
-
-    plt.imshow(asd)
+    plt.imshow(y)
     plt.show()

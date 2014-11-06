@@ -14,6 +14,7 @@ class SkinEnhancer():
     def run(self, img):
         out = cv2.medianBlur(img, self._mks)
         out = cv2.morphologyEx(out, cv2.MORPH_CLOSE, self._ks)
+
         return out
 
 

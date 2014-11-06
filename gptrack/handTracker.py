@@ -32,7 +32,7 @@ class State():
 
 class HandTracker():
 
-    def __init__(self, model='data/model/gopro.pkl', nframe=300,
+    def __init__(self, model='data/model/gopro.pkl', nframe=150,
                  display=False):
         self._hd = HandsDetector(model)
         self._cd = ChordClassifier()
@@ -65,7 +65,7 @@ class HandTracker():
             strum.append(pts)
             state.update()
 
-            self._cd.run(frame, hands.left)
+            #self._cd.run(frame, hands.left)
 
             if self._display:
                 self.__show_points(frame, pts)
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     parser.add_argument("-i", "--infile", type=str, required=True,
                         help="input video file")
     parser.add_argument("-o", "--outfile", type=str, help="output sequence")
-    parser.add_argument("-d", "--display", action="store_true")
+    parser.add_argument("-d", "--display", action="store_true", help="display")
 
     args = parser.parse_args()
 

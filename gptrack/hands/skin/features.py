@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 import ctypes as ct
 
-from util import makeCallableString
+LIB = 'hands/skin/blockProc'
 
 
 class BlockHistInterface():
@@ -15,7 +15,7 @@ class BlockHistInterface():
         self._s = s
         self._nbins = nbins
         self._ndim = ndim
-        self._blockproc = np.ctypeslib.load_library('blockProc', '.')
+        self._blockproc = np.ctypeslib.load_library(LIB, '.')
 
     def run(self, img):
         img = np.int32(img)
@@ -62,16 +62,16 @@ class Features():
     def __run(self, img, kind):
         X = []
         method = kind[0]
+
         if method == 'Hist':
             nbins = kind[1]['nbins']
             nch = img.shape[2]
             bhi = BlockHistInterface(self._bs, self._skip, nbins, nch)
             X = bhi.run(img)
-        return X
+        else:
+            pass
 
-    #def __parse(self, desc):
-    #    tmp = makeCallableString(desc)
-    #    return eval(tmp)
+        return X
 
     @property
     def skip(self):

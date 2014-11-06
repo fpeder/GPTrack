@@ -1,13 +1,16 @@
 labels:
   - id: 0
     color: [0,0,0]
+    name: 'background'
   - id: 1
     color: [255, 0, 0]
+    name: 'hand'
   - id: 2
     color: [0, 0, 255]
+    name: 'body'
 
 trainspec:
-  dbroot: db
+  dbroot: 'data/db'
   downsample: 1
   balance: 'True'
   discard: 'None'
