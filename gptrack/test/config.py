@@ -2,19 +2,61 @@
 # -*- coding: utf-8 -*-
 
 import os
+import yaml
 
 from glob import glob
 
 
-class ModelConfig():
+class Config():
 
-    def __init__(self, model, features):
-        self._model = model
-        self._features = features
+    def __init__(self, conf={}):
+        self._config = conf
+
+    def load(self, fn):
+        assert os.path.exists(fn), '!fn...'
+        yml = yaml.load(open(fn, 'r'))
+
+        model, featspec, labels, trainspec = self.__parse(yml)
+
+        self._config['model'] = ModelConfig(model, featspec)
+        self._config['data'] = DataConfig(labels, trainspec)
+        self._config['db'] = DbConfig(trainspec['dbroot'])
+
+    def __parse(self, conf):
+        model = conf['model']
+        trainspec = conf['trainspec']
+        featspec = conf['features']
+        labels = {}
+        for lab in conf['labels']:
+            labels[str(lab['id'])] = lab['color']
+        return model, featspec, labels, trainspec
+
+    @property
+    def get(self):
+        return self._config
+
+    @property
+    def data(self):
+        return self._config['data']
+
+    @property
+    def db(self):
+        return self._config['db']
 
     @property
     def model(self):
-        return self._model
+        return self._config['model']
+
+
+class ModelConfig():
+
+    def __init__(self, cls, features):
+        self._cls = cls
+        self._features = features
+
+    @property
+    def cls(self):
+        return self._cls
 
     @property
     def features(self):
@@ -23,11 +65,11 @@ class ModelConfig():
 
 class DataConfig():
 
-    def __init__(self, labels, ds=None, discard=None, balance=True):
+    def __init__(self, labels, trainspec):
         self._labels = labels
-        self._ds = ds
-        self._discard = discard
-        self._balance = balance
+        self._ds = trainspec['downsample']
+        self._discard = eval(trainspec['discard'])
+        self._balance = eval(trainspec['balance'])
 
     @property
     def labels(self):
@@ -65,7 +107,6 @@ class DbConfig():
         return zip(img, gtr)
 
 
-        
 if __name__ == '__main__':
     caz = DbConfig('db')
     caz.glob()

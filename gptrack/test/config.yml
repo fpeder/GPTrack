@@ -6,9 +6,15 @@ labels:
   - id: 2
     color: [0, 0, 255]
 
-model: RandomForestClassifier(min_samples_split=1, n_estimators=20)
+trainspec:
+  dbroot: db
+  downsample: 1
+  balance: 'True'
+  discard: 'None'
+
+model: [RandomForestClassifier, {'min_samples_split': 1, 'n_estimators': 20}]
 
 features:
-  - kind: BlockProcess
-    size: 8
-    fun: Hist(16)
+  blocksize: 8
+  skip: 2
+  kind: [[Hist, {'nbins': 16}]]

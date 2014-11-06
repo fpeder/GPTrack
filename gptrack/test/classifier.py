@@ -1,41 +1,62 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from config import ModelConfig, DataConfig, DbConfig
+
 from data import DataHandler, DataBalancer
-from blockproc import BlockProcess
-from features import Hist
+from util import makeCallableString
 
 from sklearn.externals import joblib
 from sklearn.ensemble import RandomForestClassifier
+from os.path import exists
 
 
-class SkinTrainer():
+class SkinClassifier():
 
-    def __init__(self, modconf, dataconf, dbconf):
-        self._model = modconf.model
-        self._config = {'model': modconf, 'data': dataconf}
-        self._dh = DataHandler(dataconf, dbconf, modconf.features)
+    def __init__(self):
+        self._cls = None
+        self._dh = None
 
-    def run(self):
+    def train(self, config):
+        self._cls = self.__parse(config.model.cls)
+        self._dh = DataHandler(config.data, config.db, config.model.features)
         X, y = self._dh.run()
-        if self._config['data'].balance:
+        if config.data.balance:
             X, y = DataBalancer().run(X, y)
 
-        self._model.fit(X, y)
+        self._cls.fit(X, y)
+
+    def run(self, img):
+        M, N = img.shape[:-1]
+        X = self._dh.get_features(img)
+        y = self._cls.predict(X)
+        y = self._dh.reshape(y, M, N)
+        import pdb; pdb.set_trace()
+        
 
     def save(self, fn):
-        pass
+        joblib.dump((self._cls, self._dh), fn)
+
+    def load(self, fn):
+        assert exists, '!fn...'
+        self._cls, self._dh = joblib.load(fn)
+
+    def __parse(self, desc):
+        tmp = makeCallableString(desc)
+        return eval(tmp)
 
 
 if __name__ == '__main__':
-    labels = {'0': [0, 0, 0], '1': [255, 0, 0], '2': [0, 0, 255]}
-    model = RandomForestClassifier(min_samples_split=1, n_estimators=20)
-    featdesc = [[BlockProcess, 8, Hist(16)]]
+    import cv2
+    # modconf = ModelConfig(model, featdesc)
+    # dataconf = DataConfig(labels, ds=4, discard=None)
+    # dbconf = DbConfig('db')
 
-    modconf = ModelConfig(model, featdesc)
-    dataconf = DataConfig(labels, ds=4, discard=None)
-    dbconf = DbConfig('db')
+    # st = SkinTrainer(modconf, dataconf, dbconf)
+    # st.run()
 
-    st = SkinTrainer(modconf, dataconf, dbconf)
-    st.run()
+    img = cv2.imread('db/2.jpg')
+    assert img.any(), '!img...'
+
+    sc = SkinClassifier()
+    sc.load('model/asd.pkl')
+    sc.run(img)

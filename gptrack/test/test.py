@@ -1,9 +1,21 @@
-from classifier import SkinClassifier
+import cv2
+import numpy as np
+import sys
 
-if __name__ == '__main__':
-    import sys
-    import cv2
+from blockproc import blocketize, blockHist
 
-    sc = SkinClassifier()
-    sc.load('model/asd.pkl')
-    sc.predicit(cv2.imread(sys.argv[1]))
+
+img = cv2.imread('db/2.jpg')
+
+img = np.int32(img)
+M, N, nch = img.shape
+w = 8
+s = int(sys.argv[1])
+nbins = 10
+
+C = np.ceil((M-w)/float(s)) * np.ceil((N-w)/float(s))
+
+blocks = np.zeros((C, nch*nbins), np.int32)
+blockHist(img, blocks, w, s, 10)
+
+print blocks

@@ -4,8 +4,7 @@
 import cv2
 import numpy as np
 
-from features import Features, Hist
-from blockproc import BlockProcess
+from features import Features
 from config import DataConfig, DbConfig
 
 
@@ -80,6 +79,18 @@ class DataHandler():
             y = np.hstack((y, ty)) if y.any() else ty
         return X, y
 
+    def get_features(self, img):
+        X, _ = self._features.run(img)
+        return X
+
+    def reshape(self, y, M, N):
+        s = self._features.skip
+        w = self._features.bs
+        Ms, Ns = np.ceil((M-w)/s), np.ceil((N-w)/s)
+        y = y.reshape(Ms, Ns)
+        y = np.kron(y, np.ones((s, s), np.int32))
+        return y
+
     def __load_data(self, img, gt):
         im = cv2.imread(img)
         gt = cv2.imread(gt)
@@ -92,16 +103,7 @@ class DataHandler():
 
 
 if __name__ == '__main__':
-    labels = {'0': [0, 0, 0], '1': [255, 0, 0], '2': [0, 0, 255]}
-    models = RandomForestClassifier(min_samples_split=1, n_estimators=20)
-    featdesc = [[BlockProcess, 8, Hist(16)]]
-
-    modconf = ModelConfig(model, labels)
-    dataconf = DataConfig(labels, ds=4, discard=None)
-    dbconf = DbConfig('db')
-
     dh = DataHandler(dataconf, dbconf, featdesc)
     X, y = dh.run()
 
     import pdb; pdb.set_trace()
-    
