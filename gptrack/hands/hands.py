@@ -31,6 +31,11 @@ class Hands():
         with open(fn, 'w') as f:
             pickle.dump({'left': self._left, 'right': self._right}, f)
 
+    def show(self):
+        tmp = self._left.show()
+        tmp += self._right.show()
+        return tmp
+
     @property
     def left(self):
         return self._left
@@ -64,12 +69,10 @@ class Hand():
         pt2 = (self._box[1][0], self._box[1][1])
         cv2.rectangle(tmp, pt1, pt2, (255, 0, 0))
 
-        pt = (self._cent[0], self._cent[1])
+        pt = (np.int32(self._cent[0]), np.int32(self._cent[1]))
         cv2.circle(tmp, pt, 10, (0, 0, 255), -1)
 
-        import pylab as plt
-        plt.imshow(tmp)
-        plt.show()
+        return tmp
 
     @property
     def cent(self):

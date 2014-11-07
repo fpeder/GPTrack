@@ -20,4 +20,4 @@ model: [RandomForestClassifier, {'min_samples_split': 1, 'n_estimators': 20}]
 features:
   blocksize: 8
   skip: 2
-  kind: [[Hist, {'nbins': 16}]]
+  kind: [['Hist', {'nbins': 16}]]

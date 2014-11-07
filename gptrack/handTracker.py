@@ -54,7 +54,6 @@ class HandTracker():
                 break
 
             frameg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
             if state.reinit():
                 hands = self._hd.run(frame)
                 pts = hands.get_points()
@@ -65,11 +64,8 @@ class HandTracker():
             strum.append(pts)
             state.update()
 
-            #self._cd.run(frame, hands.left)
-
             if self._display:
                 self.__show_points(frame, pts)
-
                 key = cv2.waitKey(1)
                 if key == ord('q'):
                     break
