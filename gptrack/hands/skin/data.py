@@ -73,6 +73,7 @@ class DataHandler():
         X = np.array([])
         y = np.array([])
         for im, gt in self._config['db'].glob():
+            print im, gt
             im, gt = self.__load_data(im, gt)
             tx, ty = self._features.run(im, gt)
             X = np.vstack((X, tx)) if X.any() else tx

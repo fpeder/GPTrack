@@ -62,6 +62,9 @@ class Hand():
             (x, y) = np.where(self._mask == 255)
             self._cent = np.array([y, x]).mean(axis=1)
 
+
+    
+
     def show(self):
         tmp = cv2.cvtColor(self._mask, cv2.COLOR_GRAY2BGR)
 

@@ -103,7 +103,9 @@ class DbConfig():
             return os.path.basename(x).startswith(self._prefix)
 
         gtr = [x for x in files if test(x)]
+        gtr.sort()
         img = [x for x in files if not test(x)]
+        img.sort()
         return zip(img, gtr)
 
 

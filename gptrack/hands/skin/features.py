@@ -74,7 +74,6 @@ class BlockGradientInterface(BlockInterface):
                                  M, N, nch,
                                  X.ctypes.data_as(ct.POINTER(ct.c_int)), R, C,
                                  self._w, self._s)
-
         return X
 
     def __my_gradient(self, img):

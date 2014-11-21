@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import cv2
+import os
 import numpy as np
 
 from hands.detector import HandsDetector
 from hands.tracker import PointTracker
 from strum.strum import Strum
-from chords import ChordClassifier
 
 
 class State():
@@ -35,13 +35,13 @@ class HandTracker():
     def __init__(self, model='data/model/gopro.pkl', nframe=150,
                  display=False):
         self._hd = HandsDetector(model)
-        self._cd = ChordClassifier()
         self._nframe = nframe
         self._tracker = None
         self._vc = None
         self._display = display
 
     def run(self, vf):
+        assert os.path.exists(vf), '! video file...'
         self._vc = cv2.VideoCapture(vf)
         state = State(self._nframe)
         strum = Strum()
@@ -54,6 +54,7 @@ class HandTracker():
                 break
 
             frameg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
             if state.reinit():
                 hands = self._hd.run(frame)
                 pts = hands.get_points()
