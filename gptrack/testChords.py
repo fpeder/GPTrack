@@ -14,12 +14,13 @@ from sklearn.svm import SVC
 from sklearn import cross_validation
 from sklearn.grid_search import GridSearchCV
 from sklearn.metrics import classification_report
+from sklearn.naive_bayes import MultinomialNB
 
 
 X, y = pickle.load(open('chords.pck', 'r'))
 
-Xtrain, Xtest, ytrain, ytest = cross_validation.train_test_split(
-    X, y, test_size=0.4, random_state=0)
+#Xtrain, Xtest, ytrain, ytest = cross_validation.train_test_split(
+#    X, y, test_size=0.5, random_state=0)
 
 #lda = LDA(n_components=None, priors=None)
 #lda = PCA(n_components=32)
@@ -28,42 +29,23 @@ Xtrain, Xtest, ytrain, ytest = cross_validation.train_test_split(
 #Xtest = lda.transform(Xtest)
 
 cls = RandomForestClassifier(n_estimators=20)
+#cls = MultinomialNB()
 #cls = ExtraTreesClassifier(n_estimators=20)
-cls.fit(Xtrain, ytrain)
+#cls.fit(Xtrain, ytrain)
 
-y = cls.predict(Xtest)
-print cls.score(Xtest, ytest)
-print confusion_matrix(ytest, y)
+#y = cls.predict(Xtest)
 
-# tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-3, 1e-4],
-#                      'C': [1, 10, 100, 1000]},
-#                     {'kernel': ['linear'], 'C': [1, 10, 100, 1000]}]
+#print cls.score(Xtest, ytest)
+#print confusion_matrix(ytest, y)
 
-# scores = ['precision', 'recall']
+kf = cross_validation.KFold(len(y), n_folds=3, random_state=0, shuffle=True)
 
-# for score in scores:
-#     print("# Tuning hyper-parameters for %s" % score)
-#     print()
+score = []
+for train_index, test_index in kf:
+    X_train, X_test = X[train_index], X[test_index]
+    y_train, y_test = y[train_index], y[test_index]
 
-#     clf = GridSearchCV(SVC(C=1), tuned_parameters, cv=5, scoring=score)
-#     clf.fit(Xtrain, ytrain)
+    cls.fit(X_train, y_train)
+    score.append(cls.score(X_test, y_test))
 
-#     print("Best parameters set found on development set:")
-#     print()
-#     print(clf.best_estimator_)
-#     print()
-#     print("Grid scores on development set:")
-#     print()
-#     for params, mean_score, scores in clf.grid_scores_:
-#         print("%0.3f (+/-%0.03f) for %r"
-#               % (mean_score, scores.std() / 2, params))
-#     print()
-
-#     print("Detailed classification report:")
-#     print()
-#     print("The model is trained on the full development set.")
-#     print("The scores are computed on the full evaluation set.")
-#     print()
-#     y_true, y_pred = ytest, clf.predict(Xtest)
-#     print(classification_report(y_true, y_pred))
-#     print()
+print np.array(score).mean()

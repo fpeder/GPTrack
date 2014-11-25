@@ -115,7 +115,7 @@ if __name__ == '__main__':
     path, fps = args.stroke, args.fps
     assert os.path.exists(path), 'path'
 
-    res = Results(path, ['Am', 'E', 'G'], ['s', 'n', 'r'], [100, 75, 50])
+    res = Results(path, ['Am', 'E', 'G'], ['s', 'n', 'r'], [])
     res.run()
 
     print res.to_latex()

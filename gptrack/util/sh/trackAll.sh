@@ -9,7 +9,7 @@ path=$(readlink -m $1)
 dest=$(readlink -m $2)
 prog=./handTracker.py
 
-for c in Am_ E_ G_
+for c in Am0_ E0_ G0_ Am7_ Bm7_ C7_ G7_
 do
     for f in s n r
     do

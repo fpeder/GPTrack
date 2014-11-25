@@ -7,6 +7,14 @@ import pylab as plt
 from scipy.ndimage.filters import gaussian_filter1d
 
 
+def less(x, y):
+    return x < y
+
+
+def greater(x, y):
+    return x > y
+
+
 class FindPeaks():
 
     def __init__(self, th, var, f):
@@ -16,38 +24,28 @@ class FindPeaks():
         self._y, self._p = None, None
 
     def run(self, y):
+        y = self.__normalize(self.__smooth(y), 2)
         self._y = y
-        y = self.__smooth(y)
+        return self.__detect_peaks(y)
 
-        def less(x, y):
-            return x < y
-
-        def greater(x, y):
-            return x > y
-
-        pos = self.__detect_peaks(y, less, greater, 1)
-        neg = self.__detect_peaks(y, greater, less, -1)
-        peaks = pos + neg
-
-        self._p = peaks
-        return peaks
-
-    def __detect_peaks(self, y, f1, f2, sign):
-        y = self.__normalize(y, 2)
+    def __detect_peaks(self, y):
         d = self.__smooth(self.__deriv(y))
-        N = len(d)-1
-        peaks = []
+        sgn = np.sign(d)
+        peaks = np.zeros(len(d))
 
-        for i in np.arange(0, N):
-            if f1(np.sign(d[i]), np.sign(d[i+1])):
-                strength = np.abs((d[i+1] - d[i-1])/2)
+        prev = 0
+        for i in np.arange(0, len(d) - 1):
 
-                if f2(y[i], sign * self._th):
-                    peaks.append(i)
-                elif strength > self._th:
-                    peaks.append(i)
-                else:
-                    pass
+            if sgn[i] != sgn[i+1]:
+                curr = y[i]
+
+                if np.abs((d[i] - d[i+1])/2) > self._th:
+                    peaks[i] = sgn[i]
+
+                if np.abs(y[i]) > self._f and np.abs(curr-prev) > .2:
+                    peaks[i] = sgn[i]
+
+                prev = curr
 
         return peaks
 
@@ -80,6 +78,6 @@ if __name__ == '__main__':
 
     pts = pickle.load(file(sys.argv[1]))
     y = pts[1][:, 1]
-    fp = FindPeaks(0.001, 10, 0.75)
+    fp = FindPeaks(0.001, 20, 0.75)
     fp.run(y)
     fp.plot()

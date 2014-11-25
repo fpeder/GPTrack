@@ -17,7 +17,7 @@ if __name__ == '__main__':
     s.load(args.infile)
 
     pts = s.right
-    ud = UpDown(0.001, 10, .75)
+    ud = UpDown(0.00035, 10, .6)
     asd = ud.run(pts)
 
     pickle.dump(asd, open(args.outfile, 'w'))

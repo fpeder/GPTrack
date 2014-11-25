@@ -19,13 +19,9 @@ class UpDown():
         self.__remove_non_detect()
 
         y = self._pts[:, 1]
-        y = y - y.mean()
+        ud = self._pd.run(y - y.mean())
 
-        peaks = self._pd.run(y)
-        ud = np.zeros(y.shape)
-        ud[peaks] = np.sign(y[peaks])
-
-        return -ud, self._nframe
+        return ud, self._nframe
 
     def __remove_non_detect(self):
         idx = ((self._pts[:, 0] != self._miss) &

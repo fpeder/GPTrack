@@ -11,7 +11,7 @@ class MakeGt():
     def __init__(self):
         self._strum = []
 
-    def run(self, vf):
+    def run(self, vf, wait):
         vc = cv2.VideoCapture(vf)
         while vc.isOpened():
             try:
@@ -21,12 +21,14 @@ class MakeGt():
                 break
 
             cv2.imshow('frame', frame)
-            key = cv2.waitKey(50)
+            key = cv2.waitKey(wait)
             if key == ord('q'):
                 break
             elif key == ord('1'):
+                print 'down'
                 self._strum.append(-1)
             elif key == ord('0'):
+                print 'up'
                 self._strum.append(1)
             else:
                 self._strum.append(0)
@@ -45,10 +47,11 @@ if __name__ == '__main__':
     parser.add_argument("-i", "--infile", type=str, required=True,
                         help="input video file")
     parser.add_argument("-o", "--outfile", type=str, help="output sequence")
+    parser.add_argument("-w", '--wait', type=int, required=True)
     args = parser.parse_args()
 
     mgt = MakeGt()
-    mgt.run(args.infile)
+    mgt.run(args.infile, args.wait)
 
     if args.outfile:
         mgt.save(args.outfile)
