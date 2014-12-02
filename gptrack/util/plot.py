@@ -21,5 +21,5 @@ if __name__ == '__main__':
     plt.ylim([-1.1, 1.1])
     plt.xlabel('frame')
     plt.ylabel('stroke')
-    plt.legend([asd, qwe], ['my', 'gt'])
+    plt.legend([asd, qwe], ['my', 'gt'], bbox_to_anchor=(1, 0.5))
     plt.savefig(fn + '.png')

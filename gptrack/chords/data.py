@@ -5,6 +5,7 @@ import os
 import cv2
 import numpy as np
 import cPickle as pickle
+import gzip
 
 from glob import glob
 from hands import HandsDetector
@@ -22,10 +23,8 @@ class DumpFeatures():
 
     def run(self, outfile):
         X, y = self._gd.run(self._labels)
-        X = self._feat.run(X)
-        y = np.array(y)
-
-        pickle.dump((X, y), open(outfile, 'w'))
+        X, y = self._feat.run(X), np.array(y)
+        pickle.dump((X, y), gzip.open(outfile, 'wb'))
 
 
 class GetData():
@@ -40,15 +39,11 @@ class GetData():
         for key in chords.keys():
             print key
             data = [self.__my_glob(key, x) for x in self._prefix]
-
             for a, b, c in zip(data[0], data[1], data[2]):
-                #print a, b, c
                 X.append([cv2.imread(a),
                           cv2.imread(b),
                           pickle.load(open(c, 'r'))])
-
             y += [chords[key] for n in range(len(data[0]))]
-
         return X, y
 
     def __my_glob(self, chord, pref):
