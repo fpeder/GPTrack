@@ -5,26 +5,25 @@ import cv2
 import numpy as np
 
 from cropHand import CropHand
-from progress.bar import Bar
 
 
-class Features():
+class Features(object):
 
     def __init__(self):
         self._ch = CropHand()
 
-    def run(self, X):
-        nX1 = []
-        bar = Bar('Processing', max=len(X))
-        for x in X:
-            box = self._ch.run(x[0], x[1], x[2][1])
-            vec = box.reshape(-1)
-            vec -= vec.mean()
-            vec = np.hstack((vec, x[2][0][1]))
-            nX1.append(vec)
-            bar.next()
-        bar.finish()
-        return np.array(nX1)
+
+class Chord2Vec(Features):
+
+    def __init__(self):
+        Features.__init__(self)
+
+    def run(self, frame, mask, box):
+        img = self._ch.run(frame, mask, box)
+        vec = img.reshape(-1)
+        vec -= vec.mean()
+        vec = np.hstack((vec, box[1]))
+        return vec
 
 
 if __name__ == '__main__':

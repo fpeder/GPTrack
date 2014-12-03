@@ -2,87 +2,66 @@
 # -*- coding: utf-8 -*-
 
 import os
-import cv2
-import numpy as np
-import cPickle as pickle
 import gzip
+import cv2
+import cPickle as pickle
+import numpy as np
 
 from glob import glob
-from hands import HandsDetector
-from frameReader import FrameReader
-from features import Features
+from progress.bar import Bar
+from features import Chord2Vec
 
 
-class DumpFeatures():
+class Loader():
 
     def __init__(self, dbroot, labels):
         assert os.path.exists(dbroot), '! dbroot...'
-        self._gd = GetData(dbroot)
-        self._feat = Features()
+        self._dbroot = dbroot
         self._labels = labels
 
-    def run(self, outfile):
-        X, y = self._gd.run(self._labels)
-        X, y = self._feat.run(X), np.array(y)
-        pickle.dump((X, y), gzip.open(outfile, 'wb'))
+    def next(self):
+        for key in self._labels.keys():
+            ch, lab = key, self._labels[key]
+            frame, mask, info = (self.__my_glob(ch, 'frame'),
+                                 self.__my_glob(ch, 'mask'),
+                                 self.__my_glob(ch, 'info'))
+            for f, m, i in zip(frame, mask, info):
+                a = cv2.cvtColor(cv2.imread(f), cv2.COLOR_BGR2GRAY)
+                b = cv2.imread(m)
+                c = pickle.load(open(i, 'r'))
+                yield lab, a, b, c[1]
 
-
-class GetData():
-
-    def __init__(self, dbroot, prefix=['frame', 'mask', 'info']):
-        assert os.path.exists(dbroot), '! dbroot...'
-        self._dbroot = dbroot
-        self._prefix = prefix
-
-    def run(self, chords):
-        X, y = [], []
-        for key in chords.keys():
-            print key
-            data = [self.__my_glob(key, x) for x in self._prefix]
-            for a, b, c in zip(data[0], data[1], data[2]):
-                X.append([cv2.imread(a),
-                          cv2.imread(b),
-                          pickle.load(open(c, 'r'))])
-            y += [chords[key] for n in range(len(data[0]))]
-        return X, y
-
-    def __my_glob(self, chord, pref):
-        tmp = pref + '*' + chord + '*'
+    def __my_glob(self, ch, pref):
+        tmp = pref + '*' + ch + '*'
         files = glob(os.path.join(self._dbroot, tmp))
         files.sort()
         return files
 
 
-class DumpData():
+class GetData():
 
-    def __init__(self, dst, model='data/model/gopro.pkl'):
-        assert os.path.exists(dst), '! dst...'
-        self._hd = HandsDetector(model)
-        self._dst = dst
-        self._vc = None
+    def __init__(self, dbroot, labels, count=10):
+        self._loader = Loader(dbroot, labels)
+        self._feat = Chord2Vec()
+        self._count = count
+        self._labels = labels
+        self._N = len(os.path.join(dbroot, '*.jpg'))
 
-    def run(self, vf, nframes):
-        self._vf = vf
-        fr = FrameReader(vf)
-        n, c = nframes.pop(0), 0
-        for frame in fr.next():
-            c += 1
-            if c == n:
-                n = nframes.pop(0)
-                hands = self._hd.run(frame)
-                self.__dump(frame, hands.left, n)
-                if not nframes:
-                    break
+    def run(self, output):
+        X, y = [], []
+        bar = Bar('Processing', max=self._N)
+        for lab, frame, mask, box in self._loader.next():
+            X.append(self._feat.run(frame, mask, box))
+            y.append(lab)
+            bar.next()
+        bar.finish()
 
-    def __dump(self, frame, hand, n):
-        fn = os.path.basename(self._vf)
-        base = fn.split('.')[0] + '.' + str(n)
-        pt = os.path.join(self._dst, 'frame.' + base + '.jpg')
-        cv2.imwrite(pt, frame)
-        pt = os.path.join(self._dst, 'mask.' + base + '.jpg')
-        cv2.imwrite(pt, hand.mask)
-        pt = os.path.join(self._dst, 'info.' + base + '.pck')
-        pickle.dump((hand.cent, hand.box), open(pt, 'w'))
+        if output:
+            X, y = np.array(X), np.array(y)
+            
+            pickle.dump((X, y, inv_lab), gzip.open(output, 'wb'))
+        else:
+            return X, y
 
 
 if __name__ == '__main__':

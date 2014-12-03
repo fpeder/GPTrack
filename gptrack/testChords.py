@@ -18,7 +18,7 @@ from sklearn.metrics import classification_report
 from sklearn.naive_bayes import MultinomialNB
 
 
-X, y = pickle.load(gzip.open('chords.pckz', 'rb'))
+X, y, _ = pickle.load(gzip.open('chords.pckz', 'rb'))
 
 #Xtrain, Xtest, ytrain, ytest = cross_validation.train_test_split(
 #    X, y, test_size=0.5, random_state=0)
@@ -29,8 +29,8 @@ X, y = pickle.load(gzip.open('chords.pckz', 'rb'))
 
 #Xtest = lda.transform(Xtest)
 
-#cls = RandomForestClassifier(n_estimators=20)
-cls = MultinomialNB()
+cls = RandomForestClassifier(n_estimators=20)
+#cls = MultinomialNB()
 #cls = ExtraTreesClassifier(n_estimators=20)
 #cls.fit(Xtrain, ytrain)
 

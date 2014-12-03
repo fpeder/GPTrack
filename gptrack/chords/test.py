@@ -5,48 +5,52 @@ import os
 import cv2
 import cPickle as pickle
 
+from sklearn.externals import joblib
+
 from hands.detector import HandsDetector
-from features import Features
+from features import Chord2Vec
 from frameReader import FrameReader
+
+
+class ChordDetector():
+
+    def __init__(self, cmod):
+        assert os.path.exists(cmod), '! chord model'
+        self._cls, labels = joblib.load(cmod)
+        self._feat = Chord2Vec()
+        self._labels = {v: k for k, v in labels.items()}
+
+    def run(self, img, hand):
+        x = self._feat.run(img, hand.mask, hand.box)
+        p = self._cls.predict(x)
+        return self._labels[int(p)]
 
 
 class Test():
 
-    def __init__(self, skin_model='data/model/gopro.pkl',
-                 chords_model='data/model/chords.pkl'):
-
-        assert os.path.exists(skin_model), '! skin model...'
-        self._hd = HandsDetector(skin_model)
-
-        assert os.path.exists(chords_model), '! chords model...'
-        self._labels, self._model = pickle.load(open(chords_model, 'r'))
-
-        self._feat = Features()
+    def __init__(self, cmod='data/model/chords.pkl',
+                 smod='data/model/gopro.pkl'):
+        self._hd = HandsDetector(smod)
+        self._cd = ChordDetector(cmod)
 
     def run(self, vf):
         fr = FrameReader(vf)
         for frame in fr.next():
             hands = self._hd.run(frame)
-            cent, box = hands.left.cent, hands.left.box
-            data = [[frame, None, (cent, box)]]
-            x = self._feat.run(data)
-            p = self._model.predict(x)[0]
-
-            self.__show(frame, box, p)
-            cv2.waitKey(5)
+            frameg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            ch = self._cd.run(frameg, hands.left)
+            
+            self.__show(frame, hands.left.box, ch)
+            cv2.waitKey(4)
 
     def __show(self, frame, box, label):
         tmp = frame
         p, q = tuple(box[0]), tuple(box[1])
         cv2.rectangle(tmp, p, q, (255, 0, 0), 2)
-        cv2.putText(tmp, self.__get_key(label), (p[0]+10, p[1]-10),
+        cv2.putText(tmp, label, (p[0]+10, p[1]-10),
                     cv2.FONT_HERSHEY_SIMPLEX, 1, 255, 3)
         cv2.imshow('chord', tmp)
 
-    def __get_key(self, label):
-        for name, x in self._labels.iteritems():
-            if x == label:
-                return name
 
 if __name__ == '__main__':
     import argparse
@@ -55,4 +59,5 @@ if __name__ == '__main__':
     argparse.add_argument('-i', '--infile', type=str, required=True)
     args = argparse.parse_args()
 
-    Test().run(args.infile)
+    test = Test()
+    test.run(args.infile)

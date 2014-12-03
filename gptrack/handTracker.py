@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import cv2
-import os
 import numpy as np
 
+from frameReader import FrameReader
 from hands.detector import HandsDetector
 from hands.tracker import PointTracker
 from strum.strum import Strum
@@ -41,17 +41,19 @@ class HandTracker():
         self._display = display
 
     def run(self, vf):
-        assert os.path.exists(vf), '! video file...'
-        self._vc = cv2.VideoCapture(vf)
+        fr = FrameReader(vf)
+        #assert os.path.exists(vf), '! video file...'
+        #self._vc = cv2.VideoCapture(vf)
         state = State(self._nframe)
         strum = Strum()
 
-        while self._vc.isOpened():
-            try:
-                ret, frame = self._vc.read()
-                assert frame.any()
-            except AttributeError:
-                break
+        #while self._vc.isOpened():
+        #    try:
+        #        ret, frame = self._vc.read()
+        #        assert frame.any()
+        #    except AttributeError:
+        #        break
+        for frame in fr.next():
 
             frameg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 

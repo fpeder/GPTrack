@@ -34,7 +34,6 @@ class CropHand():
 
     def run(self, img, mask, box):
         img, mask = self._crop.run([img, mask], box)
-
         mask1, mask2 = self.__prep(mask)
 
         pt, r = self.__min_cirlce(mask2)
@@ -61,7 +60,11 @@ class CropHand():
         return y
 
     def __prep(self, mask):
-        mask1 = mask[:, :, 0]
+        if len(mask.shape) == 3:
+            mask1 = mask[:, :, 0]
+        else:
+            mask1 = mask
+
         mask1 = cv2.medianBlur(mask1, self._sz)
         mask1[mask1 >= 1] = 1
         mask2 = cv2.erode(mask1, self._strel, iterations=self._niter)
